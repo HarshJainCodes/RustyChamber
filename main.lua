@@ -13,6 +13,7 @@ require 'inventory'
 moonshine = require 'libraries.moonshine'
 
 function love.load()
+-- this is the github version
     push:setupScreen(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = true,
         resizable = true,
