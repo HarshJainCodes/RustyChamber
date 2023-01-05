@@ -2,7 +2,7 @@ MainMenu = Class{__includes = BaseState}
 
 MainMenu_Button = Class{}
 
-function MainMenu_Button:init(x, y, widthU, heightU, widthS, heightS, selectedImage, normalImage)
+function MainMenu_Button:init(x, y, widthU, heightU, widthS, heightS, selectedImage, normalImage, onPressedFunction, name)
     self.x = x
     self.y = y
     self.widthU = widthU
@@ -12,6 +12,8 @@ function MainMenu_Button:init(x, y, widthU, heightU, widthS, heightS, selectedIm
     self.selected = false
     self.selectedImage = selectedImage
     self.normalImage = normalImage
+    self.onPressedFunction = onPressedFunction
+    self.name = name
 end
 
 function MainMenu:init()
@@ -26,22 +28,58 @@ function MainMenu:init()
     self.continue_icon_selected = love.graphics.newImage('assets/main_menu/continue_icon_selected.png')
 
     self.MainMenuButtons = {}
-    self.playButton = MainMenu_Button(200, 100, 150, 150, 150, 150, self.play_icon_selected, self.play_icon)
-    self.continueButton = MainMenu_Button(200, 250, 200, 200, 200, 200, self.continue_icon_selected, self.continue_icon)
-    self.helpButton = MainMenu_Button(200, 400, 150, 150, 150, 150, self.help_icon_selected, self.help_icon)
-    self.exitButton = MainMenu_Button(200, 550, 150, 150, 150, 150, self.exit_icon_selected, self.exit_icon)
+    self.playButton = MainMenu_Button(200, 100, 300, 150, 300, 150, self.play_icon_selected, self.play_icon, function ()
+        gStateMachine:change('roomSelect')
+    end, "play")
+
+    self.continueButton = MainMenu_Button(170, 250, 500, 150, 500, 150, self.continue_icon_selected, self.continue_icon, function ()
+        
+    end, "continue")
+
+    self.helpButton = MainMenu_Button(200, 400, 300, 150, 300, 150, self.help_icon_selected, self.help_icon, function ()
+        
+    end, "help")
+
+    self.exitButton = MainMenu_Button(200, 550, 300, 150, 300, 150, self.exit_icon_selected, self.exit_icon, function ()
+        love.event.quit()
+    end, "exit")
 
     table.insert(self.MainMenuButtons, self.playButton)
     table.insert(self.MainMenuButtons, self.continueButton)
     table.insert(self.MainMenuButtons, self.helpButton)
     table.insert(self.MainMenuButtons, self.exitButton)
 
+    -- hover sound
+    self.hoverSound = love.audio.newSource('assets/sounds/hover_sound_metal_scraping.mp3', 'static')
+
+    -- so that the sound dosnt keep on repeating
+    self.prev = nil
+    self.curr = nil
+end
+
+function MainMenu:mousepressed(x, y, button)
+    if button == 1 then
+        for key, button in pairs(self.MainMenuButtons) do
+            if x > button.x and x < button.x + button.widthS and y > button.y and y < button.y + button.heightS then
+                button.onPressedFunction()
+            end
+        end
+    end
 end
 
 function MainMenu:checkMouseHover(x, y)
     for key, button in pairs(self.MainMenuButtons) do
         if x > button.x and x < button.x + button.widthU and y > button.y and y < button.y + button.heightU then
             button.selected = true
+            self.curr = button.name
+
+            -- if we changed the hover then only play the sound
+            if self.curr ~= self.prev then
+                -- stop curr sound first otherwise it sometimes dont play
+                self.hoverSound:stop()
+                self.hoverSound:play()
+                self.prev = self.curr
+            end
         else
             button.selected = false
         end

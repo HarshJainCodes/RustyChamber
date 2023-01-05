@@ -3,6 +3,7 @@ require 'gui.dialougeBox'
 
 function Room1:init()
     self.id = 1
+    self.hdrphoto = love.graphics.newImage('assets/hdr_photo.jpg')
 
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
@@ -46,14 +47,15 @@ function Room1:init()
 
     -- key holes
     self.keyhole = {}
-    self.keyhole.x = 650
+    self.keyhole.x = 670
     self.keyhole.y = 350
     self.keyhole.width = 40
     self.keyhole.height = 40
     self.keyhole.image = love.graphics.newImage('assets/grey_key_hole.png')
 
     self.popUpWindowKey = {}
-    self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/magnified_keyHole.png')
+    -- self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/magnified_keyHole.png')
+    self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/door_close.png')
     self.popUpWindowKey.active = false
     self.popUpWindowKey.x = WINDOW_WIDTH/2 - self.popUpWindowKey.magnified_keyHole:getWidth()/2
     self.popUpWindowKey.y = WINDOW_HEIGHT/2 - self.popUpWindowKey.magnified_keyHole:getHeight()/2
@@ -73,36 +75,27 @@ function Room1:init()
     table.insert(self.items, self.knife)
     table.insert(self.items, self.key)
 
+    -- tutorial red blinking
+    self.tutorialRed = 0
+    self.tutorialRedMultiplier = 1
+
 
     -- dialouge system for the game
     self.dialougeSystem = DialougeSystem()
+    self.startDialougeRoom1 = false
 
-    -- dialouges
-    -- key dialouge
-    self.keyDialouge = {}
-    self.keyDialouge.id = 1
-    self.keyDialouge.text = "Pick up the key"
-    self.keyDialouge.play = false
-    self.keyDialouge.current = 1
-    self.keyDialouge.finish = #self.keyDialouge.text
+    self.dialouge1 = Dialouge(1, "Where am I ?", 3)
+    self.dialouge2 = Dialouge(2, "Gotta find a way out of here", 3)
+    self.dialouge3 = Dialouge(3, "Look At Your Surroundings for hints", 1000)
 
-    --knife dialouge
-    self.knifeDialouge = {}
-    self.knifeDialouge.id = 2
-    self.knifeDialouge.text = "Where am I ?"
-    self.knifeDialouge.play = false
-    self.knifeDialouge.current = 1
-    self.knifeDialouge.finish = #self.knifeDialouge.text
-
-    self.dialougeSystem:insertDialouge(self.keyDialouge)
-    self.dialougeSystem:insertDialouge(self.knifeDialouge)
-
-    self.dialougeSystem:playDialouge(2)
-
+    self.dialougeSystem:insertDialouge(self.dialouge1)
+    self.dialougeSystem:insertDialouge(self.dialouge2)
+    self.dialougeSystem:insertDialouge(self.dialouge3)
 
     -- shaders effect
 
     -- shader will be applied when the user opens their eyes for the first time
+
     self.vignetteEffecBlur = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.boxblur).chain(moonshine.effects.vignette)
     self.vignetteEffecBlur.vignette.radius = 0
     self.vignetteEffecBlur.vignette.softness = 0.5
@@ -113,6 +106,10 @@ function Room1:init()
     self.vignetteEffecBlurDecreasingIncreasing = false
     self.vignetteEffecBlurEnd = false
     self.vignetteEffecBlur.boxblur.radius = {20, 20}
+
+    self.endScreenTransition = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.vignette)
+    self.endScreenTransitionRadius = 1
+    self.endScreenTransitionTrigger = false
 end
 
 function Room1:mousemoved(x, y, dx, dy, isTouch)
@@ -131,23 +128,34 @@ function Room1:mousepressed(x, y, button)
                 self.popUpWindowKey.active = true
                 self.popUpWindowKey.blur.enable("boxblur")
             end
+
+            for key, item in pairs(self.items) do
+                if not item.addedToInventory then
+                    if x > item.x and x < item.x + item.width and y > item.y and y < item.y + item.height then
+                        item.addedToInventory = true
+                        inventory:insertItem(item)
+                    end
+                end
+            end
         else
+            -- clicked outside of the popup window
             if (x < self.popUpWindowKey.x or x > self.popUpWindowKey.x + self.popUpWindowKey.width or y < self.popUpWindowKey.y or y > self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) then
                 self.popUpWindowKey.active = false
                 self.popUpWindowKey.blur.disable("boxblur")
+            else
+                -- the user clears the stage
+                if (x > self.popUpWindowKey.x and x < self.popUpWindowKey.x + self.popUpWindowKey.width and y > self.popUpWindowKey.y and y < self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) and inventory.selectedItemId == self.key.id then
+                    self.endScreenTransitionTrigger = true
+
+                    --- unlock the next room
+                    LOCKED_ROOMS = LOCKED_ROOMS + 1
+                    -- save the progress to the new file
+                    love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = LOCKED_ROOMS}))
+                end
             end
         end
 
         inventory:mousepressed(x, y, button)
-
-        for key, item in pairs(self.items) do
-            if not item.addedToInventory then
-                if x > item.x and x < item.x + item.width and y > item.y and y < item.y + item.height then
-                    item.addedToInventory = true
-                    inventory:insertItem(item)
-                end
-            end
-        end
     end
 end
 
@@ -178,6 +186,8 @@ function Room1:CauseTheBlinkOfEye(dt)
         if self.vignetteEffecBlurRadius >= 1.3 and self.vignetteEffecBlurDecreasingIncreasing == true then
             self.vignetteEffecBlur.disable("vignette")
             self.vignetteEffecBlurEnd = true
+            self.startDialougeRoom1 = true
+            self.dialougeSystem:playDialouge()
         end
     end
 end
@@ -190,7 +200,24 @@ function Room1:update(dt)
     if not self.startingVideo:isPlaying() then
         self:CauseTheBlinkOfEye(dt)
     end
-    
+
+    self.tutorialRed = self.tutorialRed + dt / 2 * self.tutorialRedMultiplier
+
+    if self.tutorialRed >= 1 then
+        self.tutorialRedMultiplier = -1
+    elseif self.tutorialRed <= 0 then
+        self.tutorialRedMultiplier = 1
+    end
+
+    if self.endScreenTransitionTrigger then
+        self.endScreenTransition.vignette.radius = self.endScreenTransitionRadius
+        self.endScreenTransition.vignette.opacity = 1
+        self.endScreenTransitionRadius = self.endScreenTransitionRadius - dt
+
+        if self.endScreenTransitionRadius <= 0 then
+            gStateMachine:change('room2')
+        end
+    end
 
     -- if self.vignetteRadius <= 0 then
     --     self.vignetteMultiply = 1
@@ -212,28 +239,43 @@ function Room1:render()
                     end
                 )
             end
-            
+
             -- after the kidnapper has opened their eyes show the objects
             if self.vignetteEffecBlurEnd then
                 self.popUpWindowKey.blur(
                     function ()
                         love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
+
+                        for key, value in pairs(self.items) do
+                            -- blinking effect so that user gets hint to pick up the knife
+                            love.graphics.setColor(self.tutorialRed, self.tutorialRed, self.tutorialRed)
+                            value.render()
+                            love.graphics.setColor(1, 1, 1)
+                        end
+
+                        love.graphics.draw(self.keyhole.image, self.keyhole.x, self.keyhole.y, 0, self.keyhole.width/self.keyhole.image:getWidth(), self.keyhole.height/self.keyhole.image:getHeight())
                     end
                 )
-
-                for key, value in pairs(self.items) do
-                    value.render()
-                end
-                love.graphics.draw(self.keyhole.image, self.keyhole.x, self.keyhole.y, 0, self.keyhole.width/self.keyhole.image:getWidth(), self.keyhole.height/self.keyhole.image:getHeight())
 
                 if self.popUpWindowKey.active then
                     love.graphics.draw(self.popUpWindowKey.magnified_keyHole, self.popUpWindowKey.x, self.popUpWindowKey.y)
                 end
 
                 love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)
-    
+
+                if self.endScreenTransitionTrigger then
+                    self.endScreenTransition(
+                        function ()
+                            love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
+                        end
+                    )
+                end
+
                 inventory:render()
-                self.dialougeSystem:render()
+
+                if self.startDialougeRoom1 then
+                    self.dialougeSystem:render()
+                end
             end
         end
     end

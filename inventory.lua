@@ -4,6 +4,7 @@ function Inventory:init()
     self.items = {}
     self.moveInventory = false
     self.selectedItemId = nil
+    self.image = love.graphics.newImage('assets/inventory/inventory_box.png')
 end
 
 function Inventory:mousepressed(x, y)
@@ -63,11 +64,13 @@ end
 function Inventory:render()
     for key, value in pairs(self.items) do
         if self.selectedItemId == value.id then
-            love.graphics.setColor(1, 0, 0)
+            love.graphics.setColor(1, 0, 1)
             love.graphics.rectangle("line", value.x, value.y, 100, 100)
+            love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())
             love.graphics.setColor(1, 1, 1)
         else
-            love.graphics.rectangle("line", value.x, value.y, 100, 100)
+            --love.graphics.rectangle("line", value.x, value.y, 100, 100)
+            love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())
         end
 
         love.graphics.draw(value.image, value.x, value.y, 0, 100/value.image:getWidth(), 100/value.image:getHeight())

@@ -3,11 +3,15 @@ WINDOW_HEIGHT = 800
 
 push = require 'push'
 Class = require 'Class'
+json = require 'libraries.json.json'
+
 require 'StateMachine'
 require 'states/BaseState'
 require 'states.MainMenu'
 require 'states.RoomSelect'
-require 'states/PlayState'
+require 'states.TransitionToNextLevel'
+require 'states.Room1'
+require 'states.Room2'
 require 'inventory'
 
 moonshine = require 'libraries.moonshine'
@@ -15,28 +19,42 @@ moonshine = require 'libraries.moonshine'
 function love.load()
 -- this is the github version
     push:setupScreen(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
-        fullscreen = true,
+        fullscreen = false,
         resizable = true,
         stretched = true,
         fullscreentype = "windows",
         highdpi = true,
         usedpiscale = true
     })
-    love.window.setVSync(0)
+    -- love.window.setVSync(0)
 
     -- love.graphics.setDefaultFilter("nearest", "nearest")
+
+    love.filesystem.setIdentity("RustyChamber")
 
     gStateMachine = StateMachine{
         ['mainMenu'] = function () return MainMenu() end,
         ['play'] = function () return PlayState() end,
         ['roomSelect'] = function () return RoomSelect() end,
         ['room1'] = function() return Room1() end,
-        ['room2'] = function() return Room2() end
+        ['room2'] = function() return Room2() end,
+        ['stateTransition'] = function () return TransitionToNextLevel() end
     }
 
     inventory = Inventory()
 
-    gStateMachine:change('roomSelect')
+    -- this is by default
+    LOCKED_ROOMS = 1
+    if love.filesystem.getInfo("locked_rooms.txt") then
+        content, size = love.filesystem.read("locked_rooms.txt")
+
+        decoded_content = json.decode(content)
+        LOCKED_ROOMS = decoded_content.unlockedTill
+    else
+        love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
+    end
+
+    gStateMachine:change('mainMenu')
 end
 
 -- world:addCollisionClass('tempClass', {ignores = {'tempClass'}})

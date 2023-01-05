@@ -29,6 +29,9 @@ function RoomSelect:init()
     self.roomWidth = WINDOW_WIDTH/6
     self.roomHeight = WINDOW_WIDTH/6
 
+    -- background image
+    self.background = love.graphics.newImage('assets/levelSelect/background.png')
+
 
     -- make those room cards
     self.room1 = RoomCard(WINDOW_WIDTH/4 + self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 1, "Room 1", "room1")
@@ -36,6 +39,8 @@ function RoomSelect:init()
     self.room3 = RoomCard(WINDOW_WIDTH/4 + 5 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 3, "Room 3", "room3")
     self.room4 = RoomCard(WINDOW_WIDTH/4 + 7 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 4, "Room 4", "room4")
     self.room5 = RoomCard(WINDOW_WIDTH/4 + 9 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 5, "Room 5", "room5")
+
+    self.lockedRoomImage = love.graphics.newImage('assets/room_level_thumbnail/locked/locked_icon.png')
 
     -- insert them into the table containing all the room cards
     table.insert(self.rooms, self.room1)
@@ -71,7 +76,9 @@ function RoomSelect:mousereleased(x, y, button)
         if self.initialMouseX == self.finalMouseX and self.initialMouseY == self.finalMouseY then
             for key, room in pairs(self.rooms) do
                 if x > room.x and x < room.x + room.width and y > room.y and y < room.y + room.height then
-                    gStateMachine:change(room.stateName)
+                    if room.number <= LOCKED_ROOMS then
+                        gStateMachine:change(room.stateName)                        
+                    end
                 end
             end
         end
@@ -107,16 +114,21 @@ function RoomSelect:update(dt)
 end
 
 function RoomSelect:render()
+    love.graphics.draw(self.background, 0, 0, 0, WINDOW_WIDTH/self.background:getWidth(), WINDOW_HEIGHT/self.background:getHeight())
     love.graphics.printf("Select the Room", 0, 100, WINDOW_WIDTH, "center")
 
-    love.graphics.line(0, WINDOW_HEIGHT/2 - self.roomHeight/2, WINDOW_WIDTH, WINDOW_HEIGHT/2 - self.roomHeight/2)
-    love.graphics.line(0, WINDOW_HEIGHT/2 + self.roomHeight/2, WINDOW_WIDTH, WINDOW_HEIGHT/2 + self.roomHeight/2)
+    -- love.graphics.line(0, WINDOW_HEIGHT/2 - self.roomHeight/2, WINDOW_WIDTH, WINDOW_HEIGHT/2 - self.roomHeight/2)
+    -- love.graphics.line(0, WINDOW_HEIGHT/2 + self.roomHeight/2, WINDOW_WIDTH, WINDOW_HEIGHT/2 + self.roomHeight/2)
 
     for key, room in pairs(self.rooms) do
-        if room.isSelected then
-            love.graphics.draw(room.imageSelected, room.x, room.y, 0, room.width/room.imageSelected:getWidth(), room.height/room.imageSelected:getHeight())
+        if room.number > LOCKED_ROOMS then
+            love.graphics.draw(self.lockedRoomImage, room.x, room.y, 0, room.width/self.lockedRoomImage:getWidth(), room.height/self.lockedRoomImage:getHeight())
         else
-            love.graphics.draw(room.imageUnselected, room.x, room.y, 0, room.width/room.imageSelected:getWidth(), room.height/room.imageSelected:getHeight())
+            if room.isSelected then
+                love.graphics.draw(room.imageSelected, room.x, room.y, 0, room.width/room.imageSelected:getWidth(), room.height/room.imageSelected:getHeight())
+            else
+                love.graphics.draw(room.imageUnselected, room.x, room.y, 0, room.width/room.imageSelected:getWidth(), room.height/room.imageSelected:getHeight())
+            end
         end
     end
 end

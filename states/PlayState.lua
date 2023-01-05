@@ -1,8 +1,5 @@
 PlayState = Class{__includes = BaseState}
 
-require 'states.Room1'
-require 'states.Room2'
-
 function PlayState:init()
     demo_img = love.graphics.newImage('assets/demo_img.jpg')
 end
