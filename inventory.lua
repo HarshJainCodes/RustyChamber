@@ -39,6 +39,7 @@ function Inventory:insertItem(name)
 
     local itemToBeAdded = {}
     if #self.items == 0 then
+        -- when inserting the very first item
         itemToBeAdded.x = WINDOW_WIDTH - 100
         itemToBeAdded.y = 100
         itemToBeAdded.width = name.width
@@ -56,7 +57,7 @@ function Inventory:insertItem(name)
         itemToBeAdded.id = name.id
     end
 
-    itemToBeAdded.name = name
+    itemToBeAdded.name = name.name
 
     table.insert(self.items, itemToBeAdded)
 end
@@ -64,10 +65,13 @@ end
 function Inventory:render()
     for key, value in pairs(self.items) do
         if self.selectedItemId == value.id then
+
             love.graphics.setColor(1, 0, 1)
-            love.graphics.rectangle("line", value.x, value.y, 100, 100)
+            -- love.graphics.rectangle("line", value.x, value.y, 100, 100)
             love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())
             love.graphics.setColor(1, 1, 1)
+            print(value.name)
+            love.graphics.printf(value.name, value.x - #value.name * 30, value.y, #value.name + 100, "center")
         else
             --love.graphics.rectangle("line", value.x, value.y, 100, 100)
             love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())

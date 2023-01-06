@@ -16,9 +16,9 @@ function RoomCard:init(x, y, width, height, number, name, stateName)
 end
 
 function RoomSelect:init()
-    self.initialMouseX = nil
+    self.initialMoutxt = nil
     self.initialMouseY = nil
-    self.finalMouseX = nil
+    self.finalMoutxt = nil
     self.finalMouseY = nil
 
     self.moveAllRoomCards = false
@@ -53,7 +53,7 @@ end
 function RoomSelect:mousepressed(x, y, button)
     if button == 1 then
         -- to register a click and not to confuse with sliding the rooms
-        self.initialMouseX = x
+        self.initialMoutxt = x
         self.initialMouseY = y
 
         -- check if you clicked to move the cards
@@ -66,14 +66,14 @@ end
 function RoomSelect:mousereleased(x, y, button)
     if button == 1 then
         -- to register a click and not to confuse with sliding the rooms
-        self.finalMouseX = x
+        self.finalMoutxt = x
         self.finalMouseY = y
 
         -- stop moving the rooms
         self.moveAllRoomCards = false
 
         -- only check for mouse click if pressed on a room and not moved the room
-        if self.initialMouseX == self.finalMouseX and self.initialMouseY == self.finalMouseY then
+        if self.initialMoutxt == self.finalMoutxt and self.initialMouseY == self.finalMouseY then
             for key, room in pairs(self.rooms) do
                 if x > room.x and x < room.x + room.width and y > room.y and y < room.y + room.height then
                     if room.number <= LOCKED_ROOMS then

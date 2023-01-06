@@ -3,7 +3,7 @@ require 'gui.dialougeBox'
 
 function Room1:init()
     self.id = 1
-    self.hdrphoto = love.graphics.newImage('assets/hdr_photo.jpg')
+    -- self.hdrphoto = love.graphics.newImage('assets/hdr_photo.jpg')
 
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
@@ -56,6 +56,9 @@ function Room1:init()
     self.popUpWindowKey = {}
     -- self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/magnified_keyHole.png')
     self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/door_close.png')
+    self.popUpWindowKey.aplhaInitial = 0
+    self.popUpWindowKey.alphaFinal = 1
+    self.popUpWindowKey.alphaProgress = 0
     self.popUpWindowKey.active = false
     self.popUpWindowKey.x = WINDOW_WIDTH/2 - self.popUpWindowKey.magnified_keyHole:getWidth()/2
     self.popUpWindowKey.y = WINDOW_HEIGHT/2 - self.popUpWindowKey.magnified_keyHole:getHeight()/2
@@ -141,6 +144,8 @@ function Room1:mousepressed(x, y, button)
             -- clicked outside of the popup window
             if (x < self.popUpWindowKey.x or x > self.popUpWindowKey.x + self.popUpWindowKey.width or y < self.popUpWindowKey.y or y > self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) then
                 self.popUpWindowKey.active = false
+                self.popUpWindowKey.aplhaInitial = 0
+                self.popUpWindowKey.alphaProgress = 0
                 self.popUpWindowKey.blur.disable("boxblur")
             else
                 -- the user clears the stage
@@ -219,6 +224,16 @@ function Room1:update(dt)
         end
     end
 
+    if self.popUpWindowKey.active then
+        self.popUpWindowKey.alphaProgress = self.popUpWindowKey.alphaProgress + dt
+        -- smoothing function math.sqrt()
+        self.popUpWindowKey.aplhaInitial = math.sqrt(self.popUpWindowKey.alphaProgress)
+
+        if self.popUpWindowKey.aplhaInitial > self.popUpWindowKey.alphaFinal then
+            self.popUpWindowKey.aplhaInitial = self.popUpWindowKey.alphaFinal
+        end
+    end
+
     -- if self.vignetteRadius <= 0 then
     --     self.vignetteMultiply = 1
     -- end
@@ -228,6 +243,7 @@ end
 function Room1:render()
 
     if self.startingVideo:isPlaying() then
+        --love.graphics.setColor(0.2, 0.2, 0.2)
         love.graphics.draw(self.startingVideo, 0, 0, 0, WINDOW_WIDTH/self.startingVideo:getWidth(), WINDOW_HEIGHT/self.startingVideo:getHeight())
     else
         -- after the video has finished
@@ -258,7 +274,9 @@ function Room1:render()
                 )
 
                 if self.popUpWindowKey.active then
+                    love.graphics.setColor(1, 1, 1, self.popUpWindowKey.aplhaInitial)
                     love.graphics.draw(self.popUpWindowKey.magnified_keyHole, self.popUpWindowKey.x, self.popUpWindowKey.y)
+                    love.graphics.setColor(1, 1, 1, 1)
                 end
 
                 love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)

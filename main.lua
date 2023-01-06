@@ -21,7 +21,7 @@ function love.load()
     push:setupScreen(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
-        stretched = true,
+        stretched = false,
         fullscreentype = "windows",
         highdpi = true,
         usedpiscale = true
@@ -65,6 +65,9 @@ function love.resize(w, h)
 end
 
 function love.keypressed(key)
+    if key == 'escape' then
+        love.event.quit()
+    end
     gStateMachine.current:keypressed(key)
 end
 
@@ -95,6 +98,6 @@ function love.draw()
     gStateMachine:render()
     love.graphics.print(love.timer.getFPS(), 0, 0)
 
-    --love.graphics.print(collectgarbage("count"))
+    love.graphics.print(collectgarbage("count"))
     push:apply('end')
 end
