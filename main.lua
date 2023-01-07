@@ -98,6 +98,6 @@ function love.draw()
     gStateMachine:render()
     love.graphics.print(love.timer.getFPS(), 0, 0)
 
-    love.graphics.print(collectgarbage("count"))
+    --love.graphics.print(collectgarbage("count"))
     push:apply('end')
 end

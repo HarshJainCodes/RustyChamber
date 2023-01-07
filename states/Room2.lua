@@ -2,14 +2,15 @@ Room2 = Class{__includes = BaseState}
 
 function Room2:init()
     self.id = 2
-    self.backgroundImage = love.graphics.newImage('assets/room2/room2.png')
+    self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
+    self.carpetImage = love.graphics.newImage('assets/room2/carpet.png')
 
     
 
     --------------------------------------------------- CONTAINS DUSTBIN INTERACTIVE AND POPUP WINDOW---------------------------------------------------------
     self.dustBinInteractable = {}
-    self.dustBinInteractable.x = 450
-    self.dustBinInteractable.y = 470
+    self.dustBinInteractable.x = 150
+    self.dustBinInteractable.y = 550
     self.dustBinInteractable.width = 80
     self.dustBinInteractable.height = 120
     self.dustBinInteractable.image = love.graphics.newImage('assets/room2/dustbin.png')
@@ -84,8 +85,8 @@ function Room2:init()
 
     ---------------------------------------------CONTAINS PAPER BALL INTERACTIVE WINDOW --------------------------------------------------------------------
     self.paperBallInteractable = {}
-    self.paperBallInteractable.x = 400
-    self.paperBallInteractable.y = 550
+    self.paperBallInteractable.x = 100
+    self.paperBallInteractable.y = 650
     self.paperBallInteractable.width = 40
     self.paperBallInteractable.height = 40
     self.paperBallInteractable.image = love.graphics.newImage('assets/room2/paper.png')
@@ -94,20 +95,49 @@ function Room2:init()
     end
 
     self.popUpPaper = {}
+    self.popUpPaper.dirtyImage = love.graphics.newImage('assets/room2/paper_no_pin.png')
+    self.popUpPaper.dirtyImageAlpha = 1
     self.popUpPaper.image = love.graphics.newImage('assets/room2/paper_pin.png')
+    self.popUpPaper.imageAlpha = 0
     self.popUpPaper.active = false
     self.popUpPaper.width = 0.75 * self.popUpPaper.image:getWidth()
     self.popUpPaper.height = 0.75 * self.popUpPaper.image:getHeight()
     self.popUpPaper.x = WINDOW_WIDTH/2 - self.popUpPaper.width/2
     self.popUpPaper.y = WINDOW_HEIGHT/2 - self.popUpPaper.height/2
-    self.popUpPaper.alphaInitial = 0
-    self.popUpPaper.alphaFinal = 1
-    self.popUpPaper.alphaProgress = 0
+
+    -- you require an eraser to erase the ink
+    self.popUpPaper.eraserActive = false
+
     self.popUpPaper.lerp = function (start, finish, t)
         return start + (finish - start) * t
     end
-    
-    ---------------------------------------------ITEMS THAT CAN BE ADDED TO THE INVENTORY
+
+    ---------------------------------------------LOCKER STEEL INTERACTIVE CODE----------------------------------------------------------------------------
+    self.locker = {}
+    self.locker.width = 250
+    self.locker.height = 250
+    self.locker.x = 230
+    self.locker.y = 430
+    self.locker.image = love.graphics.newImage('assets/room2/locker_steel.png')
+    self.locker.render = function ()
+        love.graphics.draw(self.locker.image, self.locker.x, self.locker.y, 0, self.locker.width/self.locker.image:getWidth(), self.locker.height/self.locker.image:getHeight())
+    end
+
+    self.lockerPopup = {}
+    self.lockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
+    self.lockerPopup.width = self.lockerPopup.image:getWidth()
+    self.lockerPopup.height = self.lockerPopup.image:getHeight()
+    self.lockerPopup.x = WINDOW_WIDTH/2 - self.lockerPopup.width/2
+    self.lockerPopup.y = WINDOW_HEIGHT/2 - self.lockerPopup.height/2
+    self.lockerPopup.aplhaInitial = 0
+    self.lockerPopup.alphaProgress = 0
+    self.lockerPopup.aplhaFinal = 1
+    self.lockerPopup.active = false
+    self.lockerPopup.lerp = function (start, finish, t)
+        return start + (finish - start) * t
+    end
+
+    ---------------------------------------------ITEMS THAT CAN BE ADDED TO THE INVENTORY-------------------------------------------------------------------
     -- items that can be added to inventory
     self.screwdriver = {}
     self.screwdriver.id = 3
@@ -123,12 +153,28 @@ function Room2:init()
             love.graphics.draw(self.screwdriver.image, self.screwdriver.x, self.screwdriver.y, 0, self.screwdriver.width/self.screwdriver.image:getWidth(), self.screwdriver.height/self.screwdriver.image:getHeight())
         end
     end
+
+
+    self.crowbar = {}
+    self.crowbar.id = 4
+    self.crowbar.width = 100
+    self.crowbar.height = 100
+    self.crowbar.x = 1000
+    self.crowbar.y = 650
+    self.crowbar.addedToInventory = false
+    self.crowbar.image = love.graphics.newImage('assets/room2/crowbar.png')
+    self.crowbar.name = "crowbar"
+    self.crowbar.render = function ()
+        if not self.crowbar.addedToInventory then
+            love.graphics.draw(self.crowbar.image, self.crowbar.x, self.crowbar.y, 0, self.crowbar.width/self.crowbar.image:getWidth(), self.crowbar.height/self.crowbar.image:getHeight())
+        end
+    end
 end
 
 function Room2:mousepressed(x, y, button, isTouch)
     if button == 1 then
         -- check if clicked on the photo
-        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) then
+        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.lockerPopup.active) then
             -- if clicked on dustbin
             if x > self.dustBinInteractable.x and x < self.dustBinInteractable.x + self.dustBinInteractable.width and y > self.dustBinInteractable.y and y < self.dustBinInteractable.y + self.dustBinInteractable.height then
                 self.popUpDustbin.active = true
@@ -143,10 +189,20 @@ function Room2:mousepressed(x, y, button, isTouch)
                 self.popUpDustbin.blur.enable("boxblur")
             end
 
+            -- if clicked on locker
+            if x > self.locker.x and x < self.locker.x + self.locker.width and y > self.locker.y and y < self.locker.y + self.locker.height then
+                self.lockerPopup.active = true
+
+                -- REMBERBER we are enabling the blur effect of the dustbin interface
+                self.popUpDustbin.blur.enable("boxblur")
+            end
+
+            -- if pressed on photo frame then disappear the photo frame
             if x > self.photoframeInteractable.x and x < self.photoframeInteractable.x + self.photoframeInteractable.width and y > self.photoframeInteractable.y and y < self.photoframeInteractable.y + self.photoframeInteractable.height and self.photoframeInteractable.disappear == false then
                 self.photoframeInteractable.disappear = true
             end
 
+            -- toggle the switch on and off
             if x > self.switchInteractable.x and x < self.switchInteractable.x + self.switchInteractable.width and y > self.switchInteractable.y and y < self.switchInteractable.y + self.switchInteractable.height then
                 if self.switchInteractable.switchStatus == "on" then
                     self.switchInteractable.switchStatus = "off"
@@ -154,6 +210,14 @@ function Room2:mousepressed(x, y, button, isTouch)
                     self.switchInteractable.switchStatus = "on"
                 end
             end
+
+            -- add the screwbar once clicked on it
+            if self.crowbar.addedToInventory == false and x > self.crowbar.x and x < self.crowbar.x + self.crowbar.width and y > self.crowbar.y and y < self.crowbar.y + self.crowbar.height then
+                self.crowbar.addedToInventory = true
+                inventory:insertItem(self.crowbar)
+            end
+
+            
         else
             -- when dustbin popup is active
             if (self.popUpDustbin.active) and (x < self.popUpDustbin.x or x > self.popUpDustbin.x + self.popUpDustbin.width or y < self.popUpDustbin.y or y > self.popUpDustbin.y + self.popUpDustbin.height) and (x < WINDOW_WIDTH - 100) then
@@ -163,14 +227,25 @@ function Room2:mousepressed(x, y, button, isTouch)
                 self.popUpDustbin.alphaProgress = 0
             end
 
+            -- if clicked outside the popUp player disable the player
             if (self.popUpPaper.active) and (x < self.popUpPaper.x or x > self.popUpPaper.x + self.popUpPaper.width or y < self.popUpPaper.y or y > self.popUpPaper.y + self.popUpPaper.height) then
                 self.popUpPaper.active = false
                 self.popUpDustbin.blur.disable("boxblur")
-                self.popUpPaper.aplhaInitial = 0
-                self.popUpPaper.alphaProgress = 0
             end
 
-            if not self.screwdriver.addedToInventory then
+            -- if clicked outside the popup of drawer close the drawer
+            if (self.lockerPopup.active) and (x < self.lockerPopup.x or x > self.lockerPopup.x + self.lockerPopup.width or y > self.lockerPopup.y or y < self.lockerPopup.y + self.lockerPopup.height) then
+                self.lockerPopup.active = false
+                self.popUpDustbin.blur.disable("boxblur")
+                self.lockerPopup.aplhaInitial = 0
+                self.lockerPopup.alphaProgress = 0
+            end
+
+            if self.popUpPaper.active then
+                self.popUpPaper.eraserActive = true
+            end
+
+            if self.popUpDustbin.active and not self.screwdriver.addedToInventory then
                 if x > self.screwdriver.x and x < self.screwdriver.x + self.screwdriver.width and y > self.screwdriver.y and y < self.screwdriver.y + self.screwdriver.height then
                     self.screwdriver.addedToInventory = true
                     inventory:insertItem(self.screwdriver)
@@ -179,6 +254,21 @@ function Room2:mousepressed(x, y, button, isTouch)
         end
 
         inventory:mousepressed(x, y)
+    end
+end
+
+function Room2:mousemoved(x, y, dx, dy, isTouch)
+    if self.popUpPaper.active and self.popUpPaper.eraserActive then
+        if x > self.popUpPaper.x and x < self.popUpPaper.x + self.popUpPaper.width and y > self.popUpPaper.y and y < self.popUpPaper.y + self.popUpPaper.height then
+            self.popUpPaper.dirtyImageAlpha = self.popUpPaper.dirtyImageAlpha - 0.016 / 10
+            self.popUpPaper.imageAlpha = self.popUpPaper.imageAlpha + 0.016 / 10
+        end
+    end
+end
+
+function Room2:mousereleased(x, y, button, isTouch)
+    if self.popUpPaper.active then
+        self.popUpPaper.eraserActive = false
     end
 end
 
@@ -200,14 +290,15 @@ function Room2:update(dt)
         end
     end
 
-    if self.popUpPaper.active then
-        self.popUpPaper.alphaProgress = self.popUpPaper.alphaProgress + dt
-        self.popUpPaper.alphaInitial = self.popUpPaper.lerp(0, 1, self.popUpPaper.alphaProgress)
+    if self.lockerPopup.active then
+        self.lockerPopup.alphaProgress = self.lockerPopup.alphaProgress + dt
+        self.lockerPopup.aplhaInitial = self.lockerPopup.lerp(0, 1, self.lockerPopup.alphaProgress)
 
-        if self.popUpPaper.alphaInitial > self.popUpPaper.alphaFinal then
-            self.popUpPaper.alphaInitial = self.popUpPaper.alphaFinal
+        if self.lockerPopup.aplhaInitial > self.lockerPopup.aplhaFinal then
+            self.lockerPopup.aplhaInitial = self.lockerPopup.aplhaFinal
         end
     end
+
 end
 
 function Room2:render()
@@ -219,11 +310,14 @@ function Room2:render()
             self.dustBinInteractable.render()
             self.switchInteractable.render()
             self.storeRoomDoorInteractable.render()
+            self.locker.render()
 
             love.graphics.setColor(1, 1, 1, self.photoframeInteractable.aplha)
             self.photoframeInteractable.render()
             love.graphics.setColor(1, 1, 1)
             self.paperBallInteractable.render()
+
+            self.crowbar.render()
         end
     )
 
@@ -237,10 +331,17 @@ function Room2:render()
     end
 
     if self.popUpPaper.active then
-        love.graphics.setColor(1, 1, 1, self.popUpPaper.alphaInitial)
+        love.graphics.setColor(1, 1, 1, self.popUpPaper.imageAlpha)
         love.graphics.draw(self.popUpPaper.image, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
+        love.graphics.setColor(1, 1, 1, self.popUpPaper.dirtyImageAlpha)
+        love.graphics.draw(self.popUpPaper.dirtyImage, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
         love.graphics.setColor(1, 1, 1, 1)
     end
-    
+
+    if self.lockerPopup.active then
+        love.graphics.setColor(1, 1, 1, self.lockerPopup.aplhaInitial)
+        love.graphics.draw(self.lockerPopup.image, self.lockerPopup.x, self.lockerPopup.y, 0, self.lockerPopup.width/self.lockerPopup.image:getWidth(), self.lockerPopup.height/self.lockerPopup.image:getHeight())
+        love.graphics.setColor(1, 1, 1, 1)
+    end
     inventory:render()
 end
