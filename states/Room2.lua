@@ -3,9 +3,32 @@ Room2 = Class{__includes = BaseState}
 function Room2:init()
     self.id = 2
     self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
-    self.carpetImage = love.graphics.newImage('assets/room2/carpet.png')
 
-    
+    -----------------------------------------------------------------------CARPET----------------------------------------------------------------------------------------------
+    self.carpet = {}
+    self.carpet.carpetImage = love.graphics.newImage('assets/room2/carpet.png')
+    self.carpet.key = {}
+    self.carpet.key.id = 6
+    self.carpet.key.x = 650
+    self.carpet.key.y = 560
+    self.carpet.key.width = 40
+    self.carpet.key.height = 40
+    self.carpet.key.addedToInventory = false
+    self.carpet.key.image = love.graphics.newImage('assets/room2/brown_key.png')
+    self.carpet.key.name = "brown_key"
+    self.carpet.key.render = function ()
+        if not self.carpet.key.addedToInventory then
+            love.graphics.draw(self.carpet.key.image, self.carpet.key.x, self.carpet.key.y, 0, self.carpet.key.width/self.carpet.key.image:getWidth(), self.carpet.key.height/self.carpet.key.image:getHeight())
+        end
+    end
+    self.carpet.x = 550
+    self.carpet.y = 550
+    self.carpet.width = 250
+    self.carpet.height = 62.5
+    self.carpet.slideCarpet = false
+    self.carpet.render = function ()
+        love.graphics.draw(self.carpet.carpetImage, self.carpet.x, self.carpet.y, 0, self.carpet.width/self.carpet.carpetImage:getWidth(), self.carpet.height/self.carpet.carpetImage:getHeight())
+    end
 
     --------------------------------------------------- CONTAINS DUSTBIN INTERACTIVE AND POPUP WINDOW---------------------------------------------------------
     self.dustBinInteractable = {}
@@ -57,10 +80,10 @@ function Room2:init()
 
     ---------------------------------------------CONTAINS STORE ROOM DOOR INTERACTIVE CODE ------------------------------------------------------------------
     self.storeRoomDoorInteractable = {}
-    self.storeRoomDoorInteractable.x = 550
-    self.storeRoomDoorInteractable.y = 600
-    self.storeRoomDoorInteractable.width = 225
-    self.storeRoomDoorInteractable.height = 150
+    self.storeRoomDoorInteractable.x = 560
+    self.storeRoomDoorInteractable.y = 650
+    self.storeRoomDoorInteractable.width = 200
+    self.storeRoomDoorInteractable.height = 133
     self.storeRoomDoorInteractable.image = love.graphics.newImage('assets/room2/store_room_door.png')
     self.storeRoomDoorInteractable.render = function ()
         love.graphics.draw(self.storeRoomDoorInteractable.image, self.storeRoomDoorInteractable.x, self.storeRoomDoorInteractable.y, 0, self.storeRoomDoorInteractable.width/self.storeRoomDoorInteractable.image:getWidth(), self.storeRoomDoorInteractable.height/self.storeRoomDoorInteractable.image:getHeight())
@@ -119,21 +142,68 @@ function Room2:init()
     self.locker.x = 230
     self.locker.y = 430
     self.locker.image = love.graphics.newImage('assets/room2/locker_steel.png')
+
+    self.locker.upper = {}
+    self.locker.upper.x = 330
+    self.locker.upper.y = 500
+    self.locker.upper.width = 125
+    self.locker.upper.height = 60
+    self.locker.upper.render = function ()
+        love.graphics.rectangle("line", self.locker.upper.x, self.locker.upper.y, self.locker.upper.width, self.locker.upper.height)
+    end
+
+    self.locker.lower = {}
+    self.locker.lower.x = 330
+    self.locker.lower.y = 590
+    self.locker.lower.width = 125
+    self.locker.lower.height = 60
+    self.locker.lower.render = function ()
+        love.graphics.rectangle("line", self.locker.lower.x, self.locker.lower.y, self.locker.lower.width, self.locker.lower.height)
+    end
     self.locker.render = function ()
         love.graphics.draw(self.locker.image, self.locker.x, self.locker.y, 0, self.locker.width/self.locker.image:getWidth(), self.locker.height/self.locker.image:getHeight())
     end
 
-    self.lockerPopup = {}
-    self.lockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
-    self.lockerPopup.width = self.lockerPopup.image:getWidth()
-    self.lockerPopup.height = self.lockerPopup.image:getHeight()
-    self.lockerPopup.x = WINDOW_WIDTH/2 - self.lockerPopup.width/2
-    self.lockerPopup.y = WINDOW_HEIGHT/2 - self.lockerPopup.height/2
-    self.lockerPopup.aplhaInitial = 0
-    self.lockerPopup.alphaProgress = 0
-    self.lockerPopup.aplhaFinal = 1
-    self.lockerPopup.active = false
-    self.lockerPopup.lerp = function (start, finish, t)
+    -----------------------------------------------UPPER LOCKER POPUP--------------------------------------------------------------------------------------------
+    self.UpperlockerPopup = {}
+    self.UpperlockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
+    self.UpperlockerPopup.rubber = {}
+    self.UpperlockerPopup.rubber.id = 5
+    self.UpperlockerPopup.rubber.width = 109
+    self.UpperlockerPopup.rubber.height = 70
+    self.UpperlockerPopup.rubber.x = 400
+    self.UpperlockerPopup.rubber.y = 400
+    self.UpperlockerPopup.rubber.addedToInventory = false
+    self.UpperlockerPopup.rubber.name = "Eraser"
+    self.UpperlockerPopup.rubber.image = love.graphics.newImage('assets/room2/eraser.png')
+    self.UpperlockerPopup.rubber.render = function ()
+        love.graphics.draw(self.UpperlockerPopup.rubber.image, self.UpperlockerPopup.rubber.x, self.UpperlockerPopup.rubber.y, 0, self.UpperlockerPopup.rubber.width/self.UpperlockerPopup.rubber.image:getWidth(), self.UpperlockerPopup.rubber.height/self.UpperlockerPopup.rubber.image:getHeight())
+    end
+
+    self.UpperlockerPopup.width = self.UpperlockerPopup.image:getWidth()
+    self.UpperlockerPopup.height = self.UpperlockerPopup.image:getHeight()
+    self.UpperlockerPopup.x = WINDOW_WIDTH/2 - self.UpperlockerPopup.width/2
+    self.UpperlockerPopup.y = WINDOW_HEIGHT/2 - self.UpperlockerPopup.height/2
+    self.UpperlockerPopup.aplhaInitial = 0
+    self.UpperlockerPopup.alphaProgress = 0
+    self.UpperlockerPopup.aplhaFinal = 1
+    self.UpperlockerPopup.active = false
+    self.UpperlockerPopup.lerp = function (start, finish, t)
+        return start + (finish - start) * t
+    end
+
+    -------------------------------------------------LOWER LOCKER POPUP----------------------------------------------------------------------------------
+    self.LowerlockerPopup = {}
+    self.LowerlockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
+    self.LowerlockerPopup.width = self.LowerlockerPopup.image:getWidth()
+    self.LowerlockerPopup.height = self.LowerlockerPopup.image:getHeight()
+    self.LowerlockerPopup.x = WINDOW_WIDTH/2 - self.LowerlockerPopup.width/2
+    self.LowerlockerPopup.aplhaInitial = 0
+    self.LowerlockerPopup.y = WINDOW_HEIGHT/2 - self.LowerlockerPopup.height/2
+    self.LowerlockerPopup.alphaProgress = 0
+    self.LowerlockerPopup.aplhaFinal = 1
+    self.LowerlockerPopup.active = false
+    self.LowerlockerPopup.lerp = function (start, finish, t)
         return start + (finish - start) * t
     end
 
@@ -171,10 +241,24 @@ function Room2:init()
     end
 end
 
+function CloseActivePopUpWindow(x, y, popupWindow)
+    if (popupWindow.active) and (x < popupWindow.x or x > popupWindow.x + popupWindow.width or y < popupWindow.y or y > popupWindow.y + popupWindow.height) and (x < WINDOW_WIDTH - 100) then
+        popupWindow.active = false
+        popupWindow.alphaProgress = 0
+        popupWindow.alphaInitial = 0
+        return true
+    end
+    return false
+end
+
+function checkAABBCollision(x, y, object)
+    return x > object.x and x < object.x + object.width and y > object.y and y < object.y + object.height
+end
+
 function Room2:mousepressed(x, y, button, isTouch)
     if button == 1 then
         -- check if clicked on the photo
-        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.lockerPopup.active) then
+        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.UpperlockerPopup.active) and (not self.LowerlockerPopup.active) then
             -- if clicked on dustbin
             if x > self.dustBinInteractable.x and x < self.dustBinInteractable.x + self.dustBinInteractable.width and y > self.dustBinInteractable.y and y < self.dustBinInteractable.y + self.dustBinInteractable.height then
                 self.popUpDustbin.active = true
@@ -189,12 +273,32 @@ function Room2:mousepressed(x, y, button, isTouch)
                 self.popUpDustbin.blur.enable("boxblur")
             end
 
-            -- if clicked on locker
-            if x > self.locker.x and x < self.locker.x + self.locker.width and y > self.locker.y and y < self.locker.y + self.locker.height then
-                self.lockerPopup.active = true
+            -- if clicked on upper locker
+            if x > self.locker.upper.x and x < self.locker.upper.x + self.locker.upper.width and y > self.locker.upper.y and y < self.locker.upper.y + self.locker.upper.height then
+                self.UpperlockerPopup.active = true
 
                 -- REMBERBER we are enabling the blur effect of the dustbin interface
                 self.popUpDustbin.blur.enable("boxblur")
+            end
+
+            -- if clicked on lower locker
+            if x > self.locker.lower.x and x < self.locker.lower.x + self.locker.lower.width and y > self.locker.lower.y and y < self.locker.lower.y + self.locker.lower.height then
+                self.LowerlockerPopup.active = true
+
+                -- REMBERBER we are enabling the blur effect of the dustbin interface
+                self.popUpDustbin.blur.enable("boxblur")
+            end
+
+            -- if clicked on carpet
+            if checkAABBCollision(x, y, self.carpet) then
+                self.carpet.slideCarpet = true
+            end
+
+            if self.carpet.slideCarpet then
+                if checkAABBCollision(x, y, self.carpet.key) then
+                    self.carpet.key.addedToInventory = true
+                    inventory:insertItem(self.carpet.key)
+                end
             end
 
             -- if pressed on photo frame then disappear the photo frame
@@ -216,39 +320,43 @@ function Room2:mousepressed(x, y, button, isTouch)
                 self.crowbar.addedToInventory = true
                 inventory:insertItem(self.crowbar)
             end
-
-            
         else
             -- when dustbin popup is active
-            if (self.popUpDustbin.active) and (x < self.popUpDustbin.x or x > self.popUpDustbin.x + self.popUpDustbin.width or y < self.popUpDustbin.y or y > self.popUpDustbin.y + self.popUpDustbin.height) and (x < WINDOW_WIDTH - 100) then
-                self.popUpDustbin.active = false
+                if CloseActivePopUpWindow(x, y, self.popUpDustbin) then                
                 self.popUpDustbin.blur.disable("boxblur")
-                self.popUpDustbin.aplhaInitial = 0
-                self.popUpDustbin.alphaProgress = 0
             end
 
-            -- if clicked outside the popUp player disable the player
-            if (self.popUpPaper.active) and (x < self.popUpPaper.x or x > self.popUpPaper.x + self.popUpPaper.width or y < self.popUpPaper.y or y > self.popUpPaper.y + self.popUpPaper.height) then
+            -- if clicked outside the popUp paper disable the player
+            if (self.popUpPaper.active) and (x < self.popUpPaper.x or x > self.popUpPaper.x + self.popUpPaper.width or y < self.popUpPaper.y or y > self.popUpPaper.y + self.popUpPaper.height) and (x < WINDOW_WIDTH - 100) then
                 self.popUpPaper.active = false
                 self.popUpDustbin.blur.disable("boxblur")
             end
 
-            -- if clicked outside the popup of drawer close the drawer
-            if (self.lockerPopup.active) and (x < self.lockerPopup.x or x > self.lockerPopup.x + self.lockerPopup.width or y > self.lockerPopup.y or y < self.lockerPopup.y + self.lockerPopup.height) then
-                self.lockerPopup.active = false
+            -- if clicked outside the popup of upper drawer close the drawer
+            if CloseActivePopUpWindow(x, y, self.UpperlockerPopup) then
                 self.popUpDustbin.blur.disable("boxblur")
-                self.lockerPopup.aplhaInitial = 0
-                self.lockerPopup.alphaProgress = 0
             end
 
+            -- if clicked outside the popup of lower drawer close the drawer
+            if CloseActivePopUpWindow(x, y, self.LowerlockerPopup) then
+                self.popUpDustbin.blur.disable("boxblur")
+            end
+ 
             if self.popUpPaper.active then
                 self.popUpPaper.eraserActive = true
             end
 
             if self.popUpDustbin.active and not self.screwdriver.addedToInventory then
-                if x > self.screwdriver.x and x < self.screwdriver.x + self.screwdriver.width and y > self.screwdriver.y and y < self.screwdriver.y + self.screwdriver.height then
+                if checkAABBCollision(x, y, self.screwdriver) then
                     self.screwdriver.addedToInventory = true
                     inventory:insertItem(self.screwdriver)
+                end
+            end
+
+            if self.UpperlockerPopup.active and not self.UpperlockerPopup.rubber.addedToInventory then
+                if checkAABBCollision(x, y, self.UpperlockerPopup.rubber) then
+                    self.UpperlockerPopup.rubber.addedToInventory = true
+                    inventory:insertItem(self.UpperlockerPopup.rubber)
                 end
             end
         end
@@ -258,10 +366,10 @@ function Room2:mousepressed(x, y, button, isTouch)
 end
 
 function Room2:mousemoved(x, y, dx, dy, isTouch)
-    if self.popUpPaper.active and self.popUpPaper.eraserActive then
+    if self.popUpPaper.active and self.popUpPaper.eraserActive and inventory.selectedItemId == 5 then
         if x > self.popUpPaper.x and x < self.popUpPaper.x + self.popUpPaper.width and y > self.popUpPaper.y and y < self.popUpPaper.y + self.popUpPaper.height then
-            self.popUpPaper.dirtyImageAlpha = self.popUpPaper.dirtyImageAlpha - 0.016 / 10
-            self.popUpPaper.imageAlpha = self.popUpPaper.imageAlpha + 0.016 / 10
+            self.popUpPaper.dirtyImageAlpha = self.popUpPaper.dirtyImageAlpha - 0.016 / 5
+            self.popUpPaper.imageAlpha = self.popUpPaper.imageAlpha + 0.016 / 5
         end
     end
 end
@@ -290,15 +398,27 @@ function Room2:update(dt)
         end
     end
 
-    if self.lockerPopup.active then
-        self.lockerPopup.alphaProgress = self.lockerPopup.alphaProgress + dt
-        self.lockerPopup.aplhaInitial = self.lockerPopup.lerp(0, 1, self.lockerPopup.alphaProgress)
+    if self.UpperlockerPopup.active then
+        self.UpperlockerPopup.alphaProgress = self.UpperlockerPopup.alphaProgress + dt
+        self.UpperlockerPopup.aplhaInitial = self.UpperlockerPopup.lerp(0, 1, self.UpperlockerPopup.alphaProgress)
 
-        if self.lockerPopup.aplhaInitial > self.lockerPopup.aplhaFinal then
-            self.lockerPopup.aplhaInitial = self.lockerPopup.aplhaFinal
+        if self.UpperlockerPopup.aplhaInitial > self.UpperlockerPopup.aplhaFinal then
+            self.UpperlockerPopup.aplhaInitial = self.UpperlockerPopup.aplhaFinal
         end
     end
 
+    if self.LowerlockerPopup.active then
+        self.LowerlockerPopup.alphaProgress = self.LowerlockerPopup.alphaProgress + dt
+        self.LowerlockerPopup.aplhaInitial = self.LowerlockerPopup.lerp(0, 1, self.LowerlockerPopup.alphaProgress)
+
+        if self.LowerlockerPopup.aplhaInitial > self.LowerlockerPopup.aplhaFinal then
+            self.LowerlockerPopup.aplhaInitial = self.LowerlockerPopup.aplhaFinal
+        end
+    end
+
+    if self.carpet.slideCarpet then
+        self.carpet.y = math.min(self.carpet.y + 50 * dt, 580)
+    end
 end
 
 function Room2:render()
@@ -311,6 +431,11 @@ function Room2:render()
             self.switchInteractable.render()
             self.storeRoomDoorInteractable.render()
             self.locker.render()
+            self.locker.upper.render()
+            self.locker.lower.render()
+
+            self.carpet.key.render()
+            self.carpet.render()
 
             love.graphics.setColor(1, 1, 1, self.photoframeInteractable.aplha)
             self.photoframeInteractable.render()
@@ -338,9 +463,18 @@ function Room2:render()
         love.graphics.setColor(1, 1, 1, 1)
     end
 
-    if self.lockerPopup.active then
-        love.graphics.setColor(1, 1, 1, self.lockerPopup.aplhaInitial)
-        love.graphics.draw(self.lockerPopup.image, self.lockerPopup.x, self.lockerPopup.y, 0, self.lockerPopup.width/self.lockerPopup.image:getWidth(), self.lockerPopup.height/self.lockerPopup.image:getHeight())
+    if self.UpperlockerPopup.active then
+        love.graphics.setColor(1, 1, 1, self.UpperlockerPopup.aplhaInitial)
+        love.graphics.draw(self.UpperlockerPopup.image, self.UpperlockerPopup.x, self.UpperlockerPopup.y, 0, self.UpperlockerPopup.width/self.UpperlockerPopup.image:getWidth(), self.UpperlockerPopup.height/self.UpperlockerPopup.image:getHeight())
+        if not self.UpperlockerPopup.rubber.addedToInventory then
+            self.UpperlockerPopup.rubber.render()
+        end
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+
+    if self.LowerlockerPopup.active then
+        love.graphics.setColor(1, 1, 1, self.LowerlockerPopup.aplhaInitial)
+        love.graphics.draw(self.LowerlockerPopup.image, self.LowerlockerPopup.x, self.LowerlockerPopup.y, 0, self.LowerlockerPopup.width/self.LowerlockerPopup.image:getWidth(), self.LowerlockerPopup.height/self.LowerlockerPopup.image:getHeight())
         love.graphics.setColor(1, 1, 1, 1)
     end
     inventory:render()
