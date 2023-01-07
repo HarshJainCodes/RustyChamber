@@ -7,7 +7,7 @@ function Room1:init()
 
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
-    self.startingVideo:play()
+    -- self.startingVideo:play()
 
     -- will store all the items that can be obtained
     self.items = {}
@@ -56,7 +56,7 @@ function Room1:init()
     self.popUpWindowKey = {}
     -- self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/magnified_keyHole.png')
     self.popUpWindowKey.magnified_keyHole = love.graphics.newImage('assets/door_close.png')
-    self.popUpWindowKey.aplhaInitial = 0
+    self.popUpWindowKey.alphaInitial = 0
     self.popUpWindowKey.alphaFinal = 1
     self.popUpWindowKey.alphaProgress = 0
     self.popUpWindowKey.active = false
@@ -144,7 +144,7 @@ function Room1:mousepressed(x, y, button)
             -- clicked outside of the popup window
             if (x < self.popUpWindowKey.x or x > self.popUpWindowKey.x + self.popUpWindowKey.width or y < self.popUpWindowKey.y or y > self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) then
                 self.popUpWindowKey.active = false
-                self.popUpWindowKey.aplhaInitial = 0
+                self.popUpWindowKey.alphaInitial = 0
                 self.popUpWindowKey.alphaProgress = 0
                 self.popUpWindowKey.blur.disable("boxblur")
             else
@@ -227,10 +227,10 @@ function Room1:update(dt)
     if self.popUpWindowKey.active then
         self.popUpWindowKey.alphaProgress = self.popUpWindowKey.alphaProgress + dt
         -- smoothing function math.sqrt()
-        self.popUpWindowKey.aplhaInitial = math.sqrt(self.popUpWindowKey.alphaProgress)
+        self.popUpWindowKey.alphaInitial = math.sqrt(self.popUpWindowKey.alphaProgress)
 
-        if self.popUpWindowKey.aplhaInitial > self.popUpWindowKey.alphaFinal then
-            self.popUpWindowKey.aplhaInitial = self.popUpWindowKey.alphaFinal
+        if self.popUpWindowKey.alphaInitial > self.popUpWindowKey.alphaFinal then
+            self.popUpWindowKey.alphaInitial = self.popUpWindowKey.alphaFinal
         end
     end
 
@@ -274,7 +274,7 @@ function Room1:render()
                 )
 
                 if self.popUpWindowKey.active then
-                    love.graphics.setColor(1, 1, 1, self.popUpWindowKey.aplhaInitial)
+                    love.graphics.setColor(1, 1, 1, self.popUpWindowKey.alphaInitial)
                     love.graphics.draw(self.popUpWindowKey.magnified_keyHole, self.popUpWindowKey.x, self.popUpWindowKey.y)
                     love.graphics.setColor(1, 1, 1, 1)
                 end

@@ -1,8 +1,82 @@
 Room2 = Class{__includes = BaseState}
 
+PlacableItems = Class{}
+InventoryPlacableItems = Class{}
+PopupWindow = Class{}
+
+function PlacableItems:init(x, y, width, height, image)
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
+    self.image = image
+    self.render = function ()
+        love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
+    end
+end
+
+function InventoryPlacableItems:init(x, y, width, height, id, image, name)
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
+    self.image = image
+    self.id = id
+    self.addedToInventory = false
+    self.name = name
+    self.render = function ()
+        if not self.addedToInventory then
+            love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
+        end
+    end
+end
+
+function PopupWindow:init(image, width, height)
+    self.image = image
+    self.width = self.image:getWidth() * width
+    self.height = self.image:getHeight() * height
+    self.x = WINDOW_WIDTH/2 - self.width/2
+    self.y = WINDOW_HEIGHT/2 - self.height/2
+    self.active = false
+    self.alphaInitial = 0
+    self.alphaProgress = 0
+    self.alphaFinal = 1
+    self.lerp = function (start, finish, t)
+        return start + (finish - start) * t
+    end
+    self.render = function ()
+        love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
+    end
+end
+
 function Room2:init()
     self.id = 2
     self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
+
+    self.beer_bottle = {}
+    self.beer_bottle.image = love.graphics.newImage('assets/room2/beer_bottle.png')
+
+    self.digit_glow = {}
+    self.digit_glow.image = love.graphics.newImage('assets/room2/digit_glow.png')
+    self.digit_glow.x = 1000
+    self.digit_glow.y = 200
+    self.digit_glow.width = 100
+    self.digit_glow.height = 100
+    self.digit_glow.render = function ()
+        love.graphics.draw(self.digit_glow.image, self.digit_glow.x, self.digit_glow.y, 0, self.digit_glow.width/self.digit_glow.image:getWidth(), self.digit_glow.height/self.digit_glow.image:getHeight())
+    end
+
+    ----------------------------------------------------------------------light switch----------------------------------------------------------------------
+    self.light = PlacableItems(WINDOW_WIDTH/2 - 35, 0, 70, 70, love.graphics.newImage('assets/room2/light.png'))
+    self.light.switchedOn = true
+
+    -------------------------------------------------------------------ELECTRIC BOARD------------------------------------------------------------------------
+
+    self.electricBoard = PlacableItems(480, 470, 50, 50, love.graphics.newImage('assets/room2/electricBoard.png'))
+
+    self.electricBoardPopup = PopupWindow(love.graphics.newImage('assets/room2/screwlocked_close_up.png'), 0.7, 0.7)
+
+    self.electricBoardPopup.battery = InventoryPlacableItems(WINDOW_WIDTH/2 - 25, 550, 50, 100, 7, love.graphics.newImage('assets/room2/battery.png'), "battery")
 
     -----------------------------------------------------------------------CARPET----------------------------------------------------------------------------------------------
     self.carpet = {}
@@ -31,42 +105,19 @@ function Room2:init()
     end
 
     --------------------------------------------------- CONTAINS DUSTBIN INTERACTIVE AND POPUP WINDOW---------------------------------------------------------
-    self.dustBinInteractable = {}
-    self.dustBinInteractable.x = 150
-    self.dustBinInteractable.y = 550
-    self.dustBinInteractable.width = 80
-    self.dustBinInteractable.height = 120
-    self.dustBinInteractable.image = love.graphics.newImage('assets/room2/dustbin.png')
-    self.dustBinInteractable.render = function ()
-        love.graphics.draw(self.dustBinInteractable.image, self.dustBinInteractable.x, self.dustBinInteractable.y, 0, self.dustBinInteractable.width/self.dustBinInteractable.image:getWidth(), self.dustBinInteractable.height/self.dustBinInteractable.image:getHeight())
-        -- love.graphics.rectangle("fill", self.dustBinInteractable.x, self.dustBinInteractable.y, self.dustBinInteractable.width, self.dustBinInteractable.height)
-    end
 
-    self.popUpDustbin = {}
-    self.popUpDustbin.image = love.graphics.newImage('assets/room2/dustbin_close_up.png')
-    self.popUpDustbin.active = false
-    self.popUpDustbin.x = WINDOW_WIDTH/2 - self.popUpDustbin.image:getWidth()/2
-    self.popUpDustbin.y = WINDOW_HEIGHT/2 - self.popUpDustbin.image:getHeight()/2
-    self.popUpDustbin.width = self.popUpDustbin.image:getWidth()
-    self.popUpDustbin.height = self.popUpDustbin.image:getHeight()
-    self.popUpDustbin.aplhaInitial = 0
-    self.popUpDustbin.alphaFinal = 1
-    self.popUpDustbin.alphaProgress = 0
-    self.popUpDustbin.lerp = function (start, finish, t)
-        return start + (finish - start) * t
-    end
+    self.dustBinInteractable = PlacableItems(150, 550, 80, 120, love.graphics.newImage('assets/room2/dustbin.png'))
+
+    self.popUpDustbin = PopupWindow(love.graphics.newImage('assets/room2/dustbin_close_up.png'), 1, 1)
+
     self.popUpDustbin.blur = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.boxblur)
     self.popUpDustbin.blur.boxblur.radius = {20, 20}
     self.popUpDustbin.blur.disable("boxblur")
 
 
     ------------------------------------------------CONTAINS SWITCH INTERACTIVE CODE----------------------------------------------------------------------
-    self.switchInteractable = {}
-    self.switchInteractable.x = 470
-    self.switchInteractable.y = 260
-    self.switchInteractable.width = 40
-    self.switchInteractable.height = 40
-    self.switchInteractable.switchStatus = "off"
+    self.switchInteractable = PlacableItems(470, 260, 40, 40, nil)
+    self.switchInteractable.switchStatus = "on"
     self.switchInteractable.imageOFF = love.graphics.newImage('assets/room2/switch.png')
     self.switchInteractable.imageON = love.graphics.newImage('assets/room2/switch_on.png')
     self.switchInteractable.render = function ()
@@ -77,17 +128,9 @@ function Room2:init()
         end
     end
 
-
     ---------------------------------------------CONTAINS STORE ROOM DOOR INTERACTIVE CODE ------------------------------------------------------------------
-    self.storeRoomDoorInteractable = {}
-    self.storeRoomDoorInteractable.x = 560
-    self.storeRoomDoorInteractable.y = 650
-    self.storeRoomDoorInteractable.width = 200
-    self.storeRoomDoorInteractable.height = 133
-    self.storeRoomDoorInteractable.image = love.graphics.newImage('assets/room2/store_room_door.png')
-    self.storeRoomDoorInteractable.render = function ()
-        love.graphics.draw(self.storeRoomDoorInteractable.image, self.storeRoomDoorInteractable.x, self.storeRoomDoorInteractable.y, 0, self.storeRoomDoorInteractable.width/self.storeRoomDoorInteractable.image:getWidth(), self.storeRoomDoorInteractable.height/self.storeRoomDoorInteractable.image:getHeight())
-    end
+
+    self.storeRoomDoorInteractable = PlacableItems(560, 650, 200, 133, love.graphics.newImage('assets/room2/store_room_door.png'))
 
     ---------------------------------------------CONTAINS PHOTO FRAME INTERACTIVE CODE --------------------------------------------------------------------
     self.photoframeInteractable = {}
@@ -96,7 +139,7 @@ function Room2:init()
     self.photoframeInteractable.width = 150
     self.photoframeInteractable.height = 200
     self.photoframeInteractable.disappear = false
-    self.photoframeInteractable.aplha = 1
+    self.photoframeInteractable.alpha = 1
     self.photoframeInteractable.lerpProgress = 0
     self.photoframeInteractable.lerp = function (start, finish, t)
         return start + (finish - start) * t
@@ -107,15 +150,8 @@ function Room2:init()
     end
 
     ---------------------------------------------CONTAINS PAPER BALL INTERACTIVE WINDOW --------------------------------------------------------------------
-    self.paperBallInteractable = {}
-    self.paperBallInteractable.x = 100
-    self.paperBallInteractable.y = 650
-    self.paperBallInteractable.width = 40
-    self.paperBallInteractable.height = 40
-    self.paperBallInteractable.image = love.graphics.newImage('assets/room2/paper.png')
-    self.paperBallInteractable.render = function ()
-        love.graphics.draw(self.paperBallInteractable.image, self.paperBallInteractable.x, self.paperBallInteractable.y, 0, self.paperBallInteractable.width/self.paperBallInteractable.image:getWidth(), self.paperBallInteractable.height/self.paperBallInteractable.image:getHeight())
-    end
+
+    self.paperBallInteractable = PlacableItems(100, 650, 40, 40, love.graphics.newImage('assets/room2/paper.png'))
 
     self.popUpPaper = {}
     self.popUpPaper.dirtyImage = love.graphics.newImage('assets/room2/paper_no_pin.png')
@@ -149,7 +185,7 @@ function Room2:init()
     self.locker.upper.width = 125
     self.locker.upper.height = 60
     self.locker.upper.render = function ()
-        love.graphics.rectangle("line", self.locker.upper.x, self.locker.upper.y, self.locker.upper.width, self.locker.upper.height)
+        --love.graphics.rectangle("line", self.locker.upper.x, self.locker.upper.y, self.locker.upper.width, self.locker.upper.height)
     end
 
     self.locker.lower = {}
@@ -158,87 +194,28 @@ function Room2:init()
     self.locker.lower.width = 125
     self.locker.lower.height = 60
     self.locker.lower.render = function ()
-        love.graphics.rectangle("line", self.locker.lower.x, self.locker.lower.y, self.locker.lower.width, self.locker.lower.height)
+        --love.graphics.rectangle("line", self.locker.lower.x, self.locker.lower.y, self.locker.lower.width, self.locker.lower.height)
     end
     self.locker.render = function ()
         love.graphics.draw(self.locker.image, self.locker.x, self.locker.y, 0, self.locker.width/self.locker.image:getWidth(), self.locker.height/self.locker.image:getHeight())
     end
 
     -----------------------------------------------UPPER LOCKER POPUP--------------------------------------------------------------------------------------------
-    self.UpperlockerPopup = {}
-    self.UpperlockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
-    self.UpperlockerPopup.rubber = {}
-    self.UpperlockerPopup.rubber.id = 5
-    self.UpperlockerPopup.rubber.width = 109
-    self.UpperlockerPopup.rubber.height = 70
-    self.UpperlockerPopup.rubber.x = 400
-    self.UpperlockerPopup.rubber.y = 400
-    self.UpperlockerPopup.rubber.addedToInventory = false
-    self.UpperlockerPopup.rubber.name = "Eraser"
-    self.UpperlockerPopup.rubber.image = love.graphics.newImage('assets/room2/eraser.png')
-    self.UpperlockerPopup.rubber.render = function ()
-        love.graphics.draw(self.UpperlockerPopup.rubber.image, self.UpperlockerPopup.rubber.x, self.UpperlockerPopup.rubber.y, 0, self.UpperlockerPopup.rubber.width/self.UpperlockerPopup.rubber.image:getWidth(), self.UpperlockerPopup.rubber.height/self.UpperlockerPopup.rubber.image:getHeight())
-    end
 
-    self.UpperlockerPopup.width = self.UpperlockerPopup.image:getWidth()
-    self.UpperlockerPopup.height = self.UpperlockerPopup.image:getHeight()
-    self.UpperlockerPopup.x = WINDOW_WIDTH/2 - self.UpperlockerPopup.width/2
-    self.UpperlockerPopup.y = WINDOW_HEIGHT/2 - self.UpperlockerPopup.height/2
-    self.UpperlockerPopup.aplhaInitial = 0
-    self.UpperlockerPopup.alphaProgress = 0
-    self.UpperlockerPopup.aplhaFinal = 1
-    self.UpperlockerPopup.active = false
-    self.UpperlockerPopup.lerp = function (start, finish, t)
-        return start + (finish - start) * t
-    end
+    self.UpperlockerPopup = PopupWindow(love.graphics.newImage('assets/room2/drawer_locker.png'), 1, 1)
 
     -------------------------------------------------LOWER LOCKER POPUP----------------------------------------------------------------------------------
-    self.LowerlockerPopup = {}
-    self.LowerlockerPopup.image = love.graphics.newImage('assets/room2/drawer_locker.png')
-    self.LowerlockerPopup.width = self.LowerlockerPopup.image:getWidth()
-    self.LowerlockerPopup.height = self.LowerlockerPopup.image:getHeight()
-    self.LowerlockerPopup.x = WINDOW_WIDTH/2 - self.LowerlockerPopup.width/2
-    self.LowerlockerPopup.aplhaInitial = 0
-    self.LowerlockerPopup.y = WINDOW_HEIGHT/2 - self.LowerlockerPopup.height/2
-    self.LowerlockerPopup.alphaProgress = 0
-    self.LowerlockerPopup.aplhaFinal = 1
-    self.LowerlockerPopup.active = false
-    self.LowerlockerPopup.lerp = function (start, finish, t)
-        return start + (finish - start) * t
-    end
+
+    self.LowerlockerPopup = PopupWindow(love.graphics.newImage('assets/room2/drawer_locker.png'), 1, 1)
+
+    self.LowerlockerPopup.rubber = InventoryPlacableItems(400, 400, 109, 70, 5, love.graphics.newImage('assets/room2/eraser.png'), "Eraser")
+
 
     ---------------------------------------------ITEMS THAT CAN BE ADDED TO THE INVENTORY-------------------------------------------------------------------
-    -- items that can be added to inventory
-    self.screwdriver = {}
-    self.screwdriver.id = 3
-    self.screwdriver.width = 100
-    self.screwdriver.height = 200
-    self.screwdriver.x = 600
-    self.screwdriver.y = 350
-    self.screwdriver.addedToInventory = false
-    self.screwdriver.image = love.graphics.newImage('assets/room2/screwdriver.png')
-    self.screwdriver.name = "screwdriver"
-    self.screwdriver.render = function ()
-        if not self.screwdriver.addedToInventory then
-            love.graphics.draw(self.screwdriver.image, self.screwdriver.x, self.screwdriver.y, 0, self.screwdriver.width/self.screwdriver.image:getWidth(), self.screwdriver.height/self.screwdriver.image:getHeight())
-        end
-    end
 
+    self.screwdriver = InventoryPlacableItems(600, 350, 100, 200, 3, love.graphics.newImage('assets/room2/screwdriver.png'), "screwdriver")
 
-    self.crowbar = {}
-    self.crowbar.id = 4
-    self.crowbar.width = 100
-    self.crowbar.height = 100
-    self.crowbar.x = 1000
-    self.crowbar.y = 650
-    self.crowbar.addedToInventory = false
-    self.crowbar.image = love.graphics.newImage('assets/room2/crowbar.png')
-    self.crowbar.name = "crowbar"
-    self.crowbar.render = function ()
-        if not self.crowbar.addedToInventory then
-            love.graphics.draw(self.crowbar.image, self.crowbar.x, self.crowbar.y, 0, self.crowbar.width/self.crowbar.image:getWidth(), self.crowbar.height/self.crowbar.image:getHeight())
-        end
-    end
+    self.crowbar = InventoryPlacableItems(1000, 650, 100, 100, 4, love.graphics.newImage('assets/room2/crowbar.png'), "crowbar")
 end
 
 function CloseActivePopUpWindow(x, y, popupWindow)
@@ -255,10 +232,19 @@ function checkAABBCollision(x, y, object)
     return x > object.x and x < object.x + object.width and y > object.y and y < object.y + object.height
 end
 
+function UpdateAlphaBlurVariables(object, dt)
+    object.alphaProgress = object.alphaProgress + dt
+        object.alphaInitial = object.lerp(0, 1, object.alphaProgress)
+
+        if object.alphaInitial > object.alphaFinal then
+            object.alphaInitial = object.alphaFinal
+        end
+end
+
 function Room2:mousepressed(x, y, button, isTouch)
     if button == 1 then
         -- check if clicked on the photo
-        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.UpperlockerPopup.active) and (not self.LowerlockerPopup.active) then
+        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.UpperlockerPopup.active) and (not self.LowerlockerPopup.active) and (not self.electricBoardPopup.active) then
             -- if clicked on dustbin
             if x > self.dustBinInteractable.x and x < self.dustBinInteractable.x + self.dustBinInteractable.width and y > self.dustBinInteractable.y and y < self.dustBinInteractable.y + self.dustBinInteractable.height then
                 self.popUpDustbin.active = true
@@ -274,7 +260,7 @@ function Room2:mousepressed(x, y, button, isTouch)
             end
 
             -- if clicked on upper locker
-            if x > self.locker.upper.x and x < self.locker.upper.x + self.locker.upper.width and y > self.locker.upper.y and y < self.locker.upper.y + self.locker.upper.height then
+            if inventory.selectedItemId == 6 and x > self.locker.upper.x and x < self.locker.upper.x + self.locker.upper.width and y > self.locker.upper.y and y < self.locker.upper.y + self.locker.upper.height then
                 self.UpperlockerPopup.active = true
 
                 -- REMBERBER we are enabling the blur effect of the dustbin interface
@@ -289,9 +275,12 @@ function Room2:mousepressed(x, y, button, isTouch)
                 self.popUpDustbin.blur.enable("boxblur")
             end
 
-            -- if clicked on carpet
-            if checkAABBCollision(x, y, self.carpet) then
-                self.carpet.slideCarpet = true
+            -- if clicked on electric board
+            if checkAABBCollision(x, y, self.electricBoard) then
+                self.electricBoardPopup.active = true
+
+                -- REMBERBER we are enabling the blur effect of the dustbin interface
+                self.popUpDustbin.blur.enable("boxblur")
             end
 
             if self.carpet.slideCarpet then
@@ -299,6 +288,11 @@ function Room2:mousepressed(x, y, button, isTouch)
                     self.carpet.key.addedToInventory = true
                     inventory:insertItem(self.carpet.key)
                 end
+            end
+
+            -- if clicked on carpet
+            if checkAABBCollision(x, y, self.carpet) then
+                self.carpet.slideCarpet = true
             end
 
             -- if pressed on photo frame then disappear the photo frame
@@ -310,8 +304,10 @@ function Room2:mousepressed(x, y, button, isTouch)
             if x > self.switchInteractable.x and x < self.switchInteractable.x + self.switchInteractable.width and y > self.switchInteractable.y and y < self.switchInteractable.y + self.switchInteractable.height then
                 if self.switchInteractable.switchStatus == "on" then
                     self.switchInteractable.switchStatus = "off"
+                    self.light.switchedOn = false
                 else
                     self.switchInteractable.switchStatus = "on"
+                    self.light.switchedOn = true
                 end
             end
 
@@ -341,6 +337,10 @@ function Room2:mousepressed(x, y, button, isTouch)
             if CloseActivePopUpWindow(x, y, self.LowerlockerPopup) then
                 self.popUpDustbin.blur.disable("boxblur")
             end
+
+            if CloseActivePopUpWindow(x, y, self.electricBoardPopup) then
+                self.popUpDustbin.blur.disable("boxblur")
+            end
  
             if self.popUpPaper.active then
                 self.popUpPaper.eraserActive = true
@@ -353,10 +353,17 @@ function Room2:mousepressed(x, y, button, isTouch)
                 end
             end
 
-            if self.UpperlockerPopup.active and not self.UpperlockerPopup.rubber.addedToInventory then
-                if checkAABBCollision(x, y, self.UpperlockerPopup.rubber) then
-                    self.UpperlockerPopup.rubber.addedToInventory = true
-                    inventory:insertItem(self.UpperlockerPopup.rubber)
+            if self.LowerlockerPopup.active and not self.LowerlockerPopup.rubber.addedToInventory then
+                if checkAABBCollision(x, y, self.LowerlockerPopup.rubber) then
+                    self.LowerlockerPopup.rubber.addedToInventory = true
+                    inventory:insertItem(self.LowerlockerPopup.rubber)
+                end
+            end
+
+            if self.electricBoardPopup.active and not self.electricBoardPopup.battery.addedToInventory then
+                if checkAABBCollision(x, y, self.electricBoardPopup.battery) then
+                    self.electricBoardPopup.battery.addedToInventory = true
+                    inventory:insertItem(self.electricBoardPopup.battery)
                 end
             end
         end
@@ -382,50 +389,48 @@ end
 
 function Room2:update(dt)
     if self.photoframeInteractable.disappear then
-        self.photoframeInteractable.aplha = self.photoframeInteractable.lerp(1, 0, self.photoframeInteractable.lerpProgress)
+        self.photoframeInteractable.alpha = self.photoframeInteractable.lerp(1, 0, self.photoframeInteractable.lerpProgress)
         self.photoframeInteractable.lerpProgress = self.photoframeInteractable.lerpProgress + dt
+
         if self.photoframeInteractable.lerpProgress > 1 then
             self.photoframeInteractable.lerpProgress = 1
         end
     end
 
     if self.popUpDustbin.active then
-        self.popUpDustbin.alphaProgress = self.popUpDustbin.alphaProgress + dt
-        self.popUpDustbin.aplhaInitial = self.popUpDustbin.lerp(0, 1, self.popUpDustbin.alphaProgress)
-
-        if self.popUpDustbin.aplhaInitial > self.popUpDustbin.alphaFinal then
-            self.popUpDustbin.aplhaInitial = self.popUpDustbin.alphaFinal
-        end
+        UpdateAlphaBlurVariables(self.popUpDustbin, dt)
     end
 
     if self.UpperlockerPopup.active then
-        self.UpperlockerPopup.alphaProgress = self.UpperlockerPopup.alphaProgress + dt
-        self.UpperlockerPopup.aplhaInitial = self.UpperlockerPopup.lerp(0, 1, self.UpperlockerPopup.alphaProgress)
-
-        if self.UpperlockerPopup.aplhaInitial > self.UpperlockerPopup.aplhaFinal then
-            self.UpperlockerPopup.aplhaInitial = self.UpperlockerPopup.aplhaFinal
-        end
+        UpdateAlphaBlurVariables(self.UpperlockerPopup, dt)
     end
 
     if self.LowerlockerPopup.active then
-        self.LowerlockerPopup.alphaProgress = self.LowerlockerPopup.alphaProgress + dt
-        self.LowerlockerPopup.aplhaInitial = self.LowerlockerPopup.lerp(0, 1, self.LowerlockerPopup.alphaProgress)
-
-        if self.LowerlockerPopup.aplhaInitial > self.LowerlockerPopup.aplhaFinal then
-            self.LowerlockerPopup.aplhaInitial = self.LowerlockerPopup.aplhaFinal
-        end
+        UpdateAlphaBlurVariables(self.LowerlockerPopup, dt)
     end
 
+    if self.electricBoardPopup.active then
+        UpdateAlphaBlurVariables(self.electricBoardPopup, dt)
+    end
+
+    -- move the carpet down
     if self.carpet.slideCarpet then
         self.carpet.y = math.min(self.carpet.y + 50 * dt, 580)
     end
 end
 
 function Room2:render()
+    if self.light.switchedOn then
+        love.graphics.setColor(1, 1, 1, 1)
+    else
+        love.graphics.setColor(0.6, 0.6, 0.6, 1)
+    end
 
     self.popUpDustbin.blur(
         function ()
             love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
+
+            self.light.render()
 
             self.dustBinInteractable.render()
             self.switchInteractable.render()
@@ -437,7 +442,9 @@ function Room2:render()
             self.carpet.key.render()
             self.carpet.render()
 
-            love.graphics.setColor(1, 1, 1, self.photoframeInteractable.aplha)
+            self.electricBoard.render()
+
+            love.graphics.setColor(1, 1, 1, self.photoframeInteractable.alpha)
             self.photoframeInteractable.render()
             love.graphics.setColor(1, 1, 1)
             self.paperBallInteractable.render()
@@ -447,7 +454,7 @@ function Room2:render()
     )
 
     if self.popUpDustbin.active then
-        love.graphics.setColor(1, 1, 1, self.popUpDustbin.aplhaInitial)
+        love.graphics.setColor(1, 1, 1, self.popUpDustbin.alphaInitial)
         love.graphics.draw(self.popUpDustbin.image, self.popUpDustbin.x, self.popUpDustbin.y, 0, self.popUpDustbin.width/self.popUpDustbin.image:getWidth(), self.popUpDustbin.height/self.popUpDustbin.image:getHeight())
         if not self.screwdriver.addedToInventory then
             self.screwdriver.render()
@@ -463,19 +470,37 @@ function Room2:render()
         love.graphics.setColor(1, 1, 1, 1)
     end
 
-    if self.UpperlockerPopup.active then
-        love.graphics.setColor(1, 1, 1, self.UpperlockerPopup.aplhaInitial)
-        love.graphics.draw(self.UpperlockerPopup.image, self.UpperlockerPopup.x, self.UpperlockerPopup.y, 0, self.UpperlockerPopup.width/self.UpperlockerPopup.image:getWidth(), self.UpperlockerPopup.height/self.UpperlockerPopup.image:getHeight())
-        if not self.UpperlockerPopup.rubber.addedToInventory then
-            self.UpperlockerPopup.rubber.render()
+    if self.LowerlockerPopup.active then
+        love.graphics.setColor(1, 1, 1, self.LowerlockerPopup.alphaInitial)
+        love.graphics.draw(self.LowerlockerPopup.image, self.LowerlockerPopup.x, self.LowerlockerPopup.y, 0, self.LowerlockerPopup.width/self.LowerlockerPopup.image:getWidth(), self.LowerlockerPopup.height/self.LowerlockerPopup.image:getHeight())
+        if not self.LowerlockerPopup.rubber.addedToInventory then
+            self.LowerlockerPopup.rubber.render()
         end
         love.graphics.setColor(1, 1, 1, 1)
     end
 
-    if self.LowerlockerPopup.active then
-        love.graphics.setColor(1, 1, 1, self.LowerlockerPopup.aplhaInitial)
-        love.graphics.draw(self.LowerlockerPopup.image, self.LowerlockerPopup.x, self.LowerlockerPopup.y, 0, self.LowerlockerPopup.width/self.LowerlockerPopup.image:getWidth(), self.LowerlockerPopup.height/self.LowerlockerPopup.image:getHeight())
+    if self.UpperlockerPopup.active then
+        love.graphics.setColor(1, 1, 1, self.UpperlockerPopup.alphaInitial)
+        love.graphics.draw(self.UpperlockerPopup.image, self.UpperlockerPopup.x, self.UpperlockerPopup.y, 0, self.UpperlockerPopup.width/self.UpperlockerPopup.image:getWidth(), self.UpperlockerPopup.height/self.UpperlockerPopup.image:getHeight())
         love.graphics.setColor(1, 1, 1, 1)
     end
+
+    if self.electricBoardPopup.active then
+        love.graphics.setColor(1, 1, 1, self.electricBoardPopup.alphaInitial)
+        self.electricBoardPopup.render()
+        self.electricBoardPopup.battery.render()
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+
+    if not self.light.switchedOn then
+        self.digit_glow.render()
+    end
+
     inventory:render()
+
+    if MOUSE_ASSET ~= nil then
+        love.mouse.setVisible(false)
+        local mouseX, mouseY = push:toGame(love.mouse.getPosition())
+        love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+    end
 end

@@ -41,6 +41,7 @@ function love.load()
         ['stateTransition'] = function () return TransitionToNextLevel() end
     }
 
+    MOUSE_ASSET = nil
     inventory = Inventory()
 
     -- this is by default

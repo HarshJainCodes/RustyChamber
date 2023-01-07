@@ -16,7 +16,8 @@ function Inventory:mousepressed(x, y)
     for key, value in pairs(self.items) do
         if (x > WINDOW_WIDTH - 100 and y > value.y and y < value.y + 100) then
             self.selectedItemId = value.id
-            print(self.selectedItemId)
+            MOUSE_ASSET = value.image
+            -- print(self.selectedItemId)
         end
     end
 end
