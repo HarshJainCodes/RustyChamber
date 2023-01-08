@@ -4,17 +4,20 @@ WINDOW_HEIGHT = 800
 push = require 'push'
 Class = require 'Class'
 json = require 'libraries.json.json'
+moonshine = require 'libraries.moonshine'
 
 require 'StateMachine'
 require 'states/BaseState'
 require 'states.MainMenu'
 require 'states.RoomSelect'
 require 'states.TransitionToNextLevel'
+require 'states.helperFunctions'
 require 'states.Room1'
 require 'states.Room2'
+require 'states.Room3'
+require 'states.Room4'
 require 'inventory'
 
-moonshine = require 'libraries.moonshine'
 
 function love.load()
 -- this is the github version
@@ -38,6 +41,8 @@ function love.load()
         ['roomSelect'] = function () return RoomSelect() end,
         ['room1'] = function() return Room1() end,
         ['room2'] = function() return Room2() end,
+        ['room3'] = function () return Room3() end,
+        ['room4'] = function () return Room4() end,
         ['stateTransition'] = function () return TransitionToNextLevel() end
     }
 
@@ -55,7 +60,7 @@ function love.load()
         love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
     end
 
-    gStateMachine:change('mainMenu')
+    gStateMachine:change('room3')
 end
 
 -- world:addCollisionClass('tempClass', {ignores = {'tempClass'}})

@@ -1,70 +1,42 @@
 Room2 = Class{__includes = BaseState}
 
-PlacableItems = Class{}
-InventoryPlacableItems = Class{}
-PopupWindow = Class{}
+KeyButton = Class{}
 
-function PlacableItems:init(x, y, width, height, image)
+function KeyButton:init(x, y, width, height, image, value)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
     self.image = image
-    self.render = function ()
-        love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
-    end
+    self.value = value
 end
 
-function InventoryPlacableItems:init(x, y, width, height, id, image, name)
-    self.x = x
-    self.y = y
-    self.width = width
-    self.height = height
-    self.image = image
-    self.id = id
-    self.addedToInventory = false
-    self.name = name
-    self.render = function ()
-        if not self.addedToInventory then
-            love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
+function KeyButton:render()
+    love.graphics.draw(self.image,  self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
+end
+
+function Room2:pinPressed(x, y, buttons)
+    for key, value in pairs(buttons) do
+        if checkAABBCollision(x, y, value) then
+            self.enterPinPopup.text = self.enterPinPopup.text .. tostring(value.value)
+            if self.enterPinPopup.text == "2003" then
+                gStateMachine:change('room4')
+            end
+            if #self.enterPinPopup.text == 4 and self.enterPinPopup.text ~= "2003" then
+                self.enterPinPopup.text = ""
+            end
         end
     end
 end
 
-function PopupWindow:init(image, width, height)
-    self.image = image
-    self.width = self.image:getWidth() * width
-    self.height = self.image:getHeight() * height
-    self.x = WINDOW_WIDTH/2 - self.width/2
-    self.y = WINDOW_HEIGHT/2 - self.height/2
-    self.active = false
-    self.alphaInitial = 0
-    self.alphaProgress = 0
-    self.alphaFinal = 1
-    self.lerp = function (start, finish, t)
-        return start + (finish - start) * t
-    end
-    self.render = function ()
-        love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
-    end
-end
 
 function Room2:init()
     self.id = 2
     self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
 
-    self.beer_bottle = {}
-    self.beer_bottle.image = love.graphics.newImage('assets/room2/beer_bottle.png')
+    self.beer_bottle = PlacableItems(890, 550, 100, 100, love.graphics.newImage('assets/room2/beer_bottle.png'))
 
-    self.digit_glow = {}
-    self.digit_glow.image = love.graphics.newImage('assets/room2/digit_glow.png')
-    self.digit_glow.x = 1000
-    self.digit_glow.y = 200
-    self.digit_glow.width = 100
-    self.digit_glow.height = 100
-    self.digit_glow.render = function ()
-        love.graphics.draw(self.digit_glow.image, self.digit_glow.x, self.digit_glow.y, 0, self.digit_glow.width/self.digit_glow.image:getWidth(), self.digit_glow.height/self.digit_glow.image:getHeight())
-    end
+    self.digit_glow = PlacableItems(1000, 200, 100, 100, love.graphics.newImage('assets/room2/digit_glow.png'))
 
     ----------------------------------------------------------------------light switch----------------------------------------------------------------------
     self.light = PlacableItems(WINDOW_WIDTH/2 - 35, 0, 70, 70, love.graphics.newImage('assets/room2/light.png'))
@@ -77,6 +49,30 @@ function Room2:init()
     self.electricBoardPopup = PopupWindow(love.graphics.newImage('assets/room2/screwlocked_close_up.png'), 0.7, 0.7)
 
     self.electricBoardPopup.battery = InventoryPlacableItems(WINDOW_WIDTH/2 - 25, 550, 50, 100, 7, love.graphics.newImage('assets/room2/battery.png'), "battery")
+
+    ---------------------------------------------ENTER PIN SCREEN----------------------------------------------------------------------------------------------
+    self.enterPinInteractive = PlacableItems(580, 260, 100, 40, nil)
+    self.enterPinInteractive.render = function ()
+        love.graphics.rectangle("line", self.enterPinInteractive.x, self.enterPinInteractive.y, self.enterPinInteractive.width, self.enterPinInteractive.height)
+    end
+
+    self.enterPinPopup = PopupWindow(love.graphics.newImage('assets/room2/demo_image.jpg'), 0.5, 0.5)
+    self.enterPinPopup.text = ""
+
+    self.allButtons = {}
+
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 150, 300, 100, 100, love.graphics.newImage('assets/room2/1_key.png'), 1))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 50, 300, 100, 100, love.graphics.newImage('assets/room2/2_key.png'), 2))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 + 50, 300, 100, 100, love.graphics.newImage('assets/room2/3_key.png'), 3))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 150, 400, 100, 100, love.graphics.newImage('assets/room2/4_key.png'), 4))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 50, 400, 100, 100, love.graphics.newImage('assets/room2/5_key.png'), 5))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 + 50, 400, 100, 100, love.graphics.newImage('assets/room2/6_key.png'), 6))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 150, 500, 100, 100, love.graphics.newImage('assets/room2/7_key.png'), 7))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 50, 500, 100, 100, love.graphics.newImage('assets/room2/8_key.png'), 8))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 + 50, 500, 100, 100, love.graphics.newImage('assets/room2/9_key.png'), 9))
+    table.insert(self.allButtons, KeyButton(WINDOW_WIDTH/2 - 50, 600, 100, 100, love.graphics.newImage('assets/room2/0_key.png'), 0))
+
+
 
     -----------------------------------------------------------------------CARPET----------------------------------------------------------------------------------------------
     self.carpet = {}
@@ -218,19 +214,6 @@ function Room2:init()
     self.crowbar = InventoryPlacableItems(1000, 650, 100, 100, 4, love.graphics.newImage('assets/room2/crowbar.png'), "crowbar")
 end
 
-function CloseActivePopUpWindow(x, y, popupWindow)
-    if (popupWindow.active) and (x < popupWindow.x or x > popupWindow.x + popupWindow.width or y < popupWindow.y or y > popupWindow.y + popupWindow.height) and (x < WINDOW_WIDTH - 100) then
-        popupWindow.active = false
-        popupWindow.alphaProgress = 0
-        popupWindow.alphaInitial = 0
-        return true
-    end
-    return false
-end
-
-function checkAABBCollision(x, y, object)
-    return x > object.x and x < object.x + object.width and y > object.y and y < object.y + object.height
-end
 
 function UpdateAlphaBlurVariables(object, dt)
     object.alphaProgress = object.alphaProgress + dt
@@ -244,10 +227,16 @@ end
 function Room2:mousepressed(x, y, button, isTouch)
     if button == 1 then
         -- check if clicked on the photo
-        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.UpperlockerPopup.active) and (not self.LowerlockerPopup.active) and (not self.electricBoardPopup.active) then
+        if (not self.popUpDustbin.active) and (not self.popUpPaper.active) and (not self.UpperlockerPopup.active) and (not self.LowerlockerPopup.active) and (not self.electricBoardPopup.active) and (not self.enterPinPopup.active) then
             -- if clicked on dustbin
             if x > self.dustBinInteractable.x and x < self.dustBinInteractable.x + self.dustBinInteractable.width and y > self.dustBinInteractable.y and y < self.dustBinInteractable.y + self.dustBinInteractable.height then
                 self.popUpDustbin.active = true
+                self.popUpDustbin.blur.enable("boxblur")
+            end
+
+            -- if clicked on enter pin 
+            if checkAABBCollision(x, y, self.enterPinInteractive) then
+                self.enterPinPopup.active = true
                 self.popUpDustbin.blur.enable("boxblur")
             end
 
@@ -341,6 +330,14 @@ function Room2:mousepressed(x, y, button, isTouch)
             if CloseActivePopUpWindow(x, y, self.electricBoardPopup) then
                 self.popUpDustbin.blur.disable("boxblur")
             end
+
+            if CloseActivePopUpWindow(x, y, self.enterPinPopup) then
+                self.popUpDustbin.blur.disable("boxblur")
+            end
+
+            if self.enterPinPopup.active then
+                self:pinPressed(x, y, self.allButtons)
+            end
  
             if self.popUpPaper.active then
                 self.popUpPaper.eraserActive = true
@@ -413,6 +410,10 @@ function Room2:update(dt)
         UpdateAlphaBlurVariables(self.electricBoardPopup, dt)
     end
 
+    if self.enterPinPopup.active then
+        UpdateAlphaBlurVariables(self.enterPinPopup, dt)
+    end
+
     -- move the carpet down
     if self.carpet.slideCarpet then
         self.carpet.y = math.min(self.carpet.y + 50 * dt, 580)
@@ -442,7 +443,11 @@ function Room2:render()
             self.carpet.key.render()
             self.carpet.render()
 
+            self.beer_bottle.render()
+
             self.electricBoard.render()
+
+            self.enterPinInteractive.render()
 
             love.graphics.setColor(1, 1, 1, self.photoframeInteractable.alpha)
             self.photoframeInteractable.render()
@@ -490,6 +495,16 @@ function Room2:render()
         self.electricBoardPopup.render()
         self.electricBoardPopup.battery.render()
         love.graphics.setColor(1, 1, 1, 1)
+    end
+
+    if self.enterPinPopup.active then
+        love.graphics.setColor(1, 1, 1, self.enterPinPopup.alphaInitial)
+        self.enterPinPopup.render()
+        love.graphics.setColor(1, 1, 1, 1)
+        for key, value in pairs(self.allButtons) do
+            value:render()
+        end
+        love.graphics.printf(self.enterPinPopup.text, self.enterPinPopup.x, self.enterPinPopup.y, self.enterPinPopup.width, "center")
     end
 
     if not self.light.switchedOn then
