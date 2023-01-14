@@ -64,9 +64,10 @@ function Room1:init()
     self.popUpWindowKey.y = WINDOW_HEIGHT/2 - self.popUpWindowKey.magnified_keyHole:getHeight()/2
     self.popUpWindowKey.width = self.popUpWindowKey.magnified_keyHole:getWidth()
     self.popUpWindowKey.height = self.popUpWindowKey.magnified_keyHole:getHeight()
-    self.popUpWindowKey.blur = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.boxblur)
+    self.popUpWindowKey.blur = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.boxblur).chain(moonshine.effects.vignette)
     self.popUpWindowKey.blur.boxblur.radius = {20, 20}
     self.popUpWindowKey.blur.disable("boxblur")
+    self.popUpWindowKey.blur.disable("vignette")
 
     --shift room
     self.leftRoomButton = {}
@@ -113,6 +114,12 @@ function Room1:init()
     self.endScreenTransition = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.vignette)
     self.endScreenTransitionRadius = 1
     self.endScreenTransitionTrigger = false
+
+
+    self.nextLevelTransition = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.vignette)
+    self.nextLevelTransition.disable("vignette")
+    self.nextLevelTransition.vignette.opacity = 1
+    self.nextLevelTransitionRadius = 1
 end
 
 function Room1:mousemoved(x, y, dx, dy, isTouch)
@@ -146,12 +153,11 @@ function Room1:mousepressed(x, y, button)
                 self.popUpWindowKey.active = false
                 self.popUpWindowKey.alphaInitial = 0
                 self.popUpWindowKey.alphaProgress = 0
-                self.popUpWindowKey.blur.disable("boxblur")
             else
                 -- the user clears the stage
                 if (x > self.popUpWindowKey.x and x < self.popUpWindowKey.x + self.popUpWindowKey.width and y > self.popUpWindowKey.y and y < self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) and inventory.selectedItemId == self.key.id then
                     self.endScreenTransitionTrigger = true
-
+                    self.nextLevelTransition.enable("vignette")
                     --- unlock the next room
                     LOCKED_ROOMS = LOCKED_ROOMS + 1
                     -- save the progress to the new file
@@ -198,6 +204,11 @@ function Room1:CauseTheBlinkOfEye(dt)
 end
 
 function Room1:update(dt)
+
+    if self.endScreenTransitionTrigger then
+        self.nextLevelTransitionRadius = self.nextLevelTransitionRadius - dt
+        self.nextLevelTransition.vignette.radius = self.nextLevelTransitionRadius 
+    end
     if love.keyboard.isDown("return") then
         gStateMachine:change('room' .. tostring(self.id + 1))
     end
@@ -258,42 +269,38 @@ function Room1:render()
 
             -- after the kidnapper has opened their eyes show the objects
             if self.vignetteEffecBlurEnd then
-                self.popUpWindowKey.blur(
+                self.nextLevelTransition(
                     function ()
-                        love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
+                        self.popUpWindowKey.blur(
+                            function ()
+                                love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
 
-                        for key, value in pairs(self.items) do
-                            -- blinking effect so that user gets hint to pick up the knife
-                            love.graphics.setColor(self.tutorialRed, self.tutorialRed, self.tutorialRed)
-                            value.render()
-                            love.graphics.setColor(1, 1, 1)
+                                for key, value in pairs(self.items) do
+                                    -- blinking effect so that user gets hint to pick up the knife
+                                    love.graphics.setColor(self.tutorialRed, self.tutorialRed, self.tutorialRed)
+                                    value.render()
+                                    love.graphics.setColor(1, 1, 1)
+                                end
+
+                                love.graphics.draw(self.keyhole.image, self.keyhole.x, self.keyhole.y, 0, self.keyhole.width/self.keyhole.image:getWidth(), self.keyhole.height/self.keyhole.image:getHeight())
+                            end
+                        )
+
+                        if self.popUpWindowKey.active then
+                            love.graphics.setColor(1, 1, 1, self.popUpWindowKey.alphaInitial)
+                            love.graphics.draw(self.popUpWindowKey.magnified_keyHole, self.popUpWindowKey.x, self.popUpWindowKey.y)
+                            love.graphics.setColor(1, 1, 1, 1)
                         end
 
-                        love.graphics.draw(self.keyhole.image, self.keyhole.x, self.keyhole.y, 0, self.keyhole.width/self.keyhole.image:getWidth(), self.keyhole.height/self.keyhole.image:getHeight())
+                        love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)
+
+                        inventory:render()
+
+                        if self.startDialougeRoom1 then
+                            self.dialougeSystem:render()
+                        end
                     end
                 )
-
-                if self.popUpWindowKey.active then
-                    love.graphics.setColor(1, 1, 1, self.popUpWindowKey.alphaInitial)
-                    love.graphics.draw(self.popUpWindowKey.magnified_keyHole, self.popUpWindowKey.x, self.popUpWindowKey.y)
-                    love.graphics.setColor(1, 1, 1, 1)
-                end
-
-                love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)
-
-                if self.endScreenTransitionTrigger then
-                    self.endScreenTransition(
-                        function ()
-                            love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
-                        end
-                    )
-                end
-
-                inventory:render()
-
-                if self.startDialougeRoom1 then
-                    self.dialougeSystem:render()
-                end
             end
         end
     end

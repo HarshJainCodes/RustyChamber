@@ -60,11 +60,8 @@ function love.load()
         love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
     end
 
-    gStateMachine:change('room3')
+    gStateMachine:change('mainMenu')
 end
-
--- world:addCollisionClass('tempClass', {ignores = {'tempClass'}})
-
 
 function love.resize(w, h)
     push:resize(w, h)

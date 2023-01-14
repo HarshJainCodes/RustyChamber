@@ -51,6 +51,7 @@ function Room3:init()
     self.waterTankPopup.alpha = 1
 
     self.waterTankPopupRevealed = PopupWindow(love.graphics.newImage('assets/room3/watertank_water_empty.png'), 0.6, 0.6)
+    -- self.waterTankPopupRevealed.yellow_key = InventoryPlacableItems(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 100, 100, )
     -----------------------------------------------SINK-----------------------------------------
     self.sinkInteractable = PlacableItems(230, 350, 200, 150, love.graphics.newImage('assets/room3/sink.png'))
 
@@ -62,7 +63,7 @@ function Room3:init()
     ----------------------------------------------------------------------------------------------------------------------
     self.modifiedV = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.modified_vignette).chain(moonshine.effects.boxblur)
     self.modifiedV.modified_vignette.radius = 150
-    self.modifiedV.modified_vignette.opacity = 0
+    self.modifiedV.modified_vignette.opacity = 0.3
     -- self.modifiedV.disable("modified_vignette")
     self.modifiedV.boxblur.radius = {20, 20}
     self.modifiedV.disable("boxblur")
@@ -101,7 +102,7 @@ function Room3:mousepressed(x, y, button, istouch)
             -- if clicked on water tank
             if checkAABBCollision(x, y, self.waterTankInteractable) then
                 self.modifiedV.enable("boxblur")
-                self.modifiedV.disable("modified_vignette")
+                -- self.modifiedV.disable("modified_vignette")
                 self.waterTankPopup.active = true
             end  
 

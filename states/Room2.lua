@@ -38,6 +38,10 @@ function Room2:init()
 
     self.digit_glow = PlacableItems(1000, 200, 100, 100, love.graphics.newImage('assets/room2/digit_glow.png'))
 
+    self.textColor = {
+        {0, 0, 1}, {1, 1, 0}, {0, 1, 0}, {1, 0, 0}
+    }
+
     ----------------------------------------------------------------------light switch----------------------------------------------------------------------
     self.light = PlacableItems(WINDOW_WIDTH/2 - 35, 0, 70, 70, love.graphics.newImage('assets/room2/light.png'))
     self.light.switchedOn = true
@@ -504,7 +508,10 @@ function Room2:render()
         for key, value in pairs(self.allButtons) do
             value:render()
         end
-        love.graphics.printf(self.enterPinPopup.text, self.enterPinPopup.x, self.enterPinPopup.y, self.enterPinPopup.width, "center")
+        for i = 1, #self.enterPinPopup.text do
+            love.graphics.setColor(self.textColor[i])
+            love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
+        end
     end
 
     if not self.light.switchedOn then
