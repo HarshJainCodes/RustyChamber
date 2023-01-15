@@ -60,7 +60,7 @@ function love.load()
         love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
     end
 
-    gStateMachine:change('mainMenu')
+    gStateMachine:change('room3')
 end
 
 function love.resize(w, h)

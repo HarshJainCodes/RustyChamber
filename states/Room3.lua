@@ -18,7 +18,7 @@ function WaterDrop:init(x, y, width, height, image)
 end
 
 function Room3:init()
-    self.backgroundImage = love.graphics.newImage('assets/room3/room3.png')
+    self.backgroundImage = love.graphics.newImage('assets/room3/room3_background.png')
 
     --------background music----------------
     self.backgroundWaterSound = love.audio.newSource('assets/room3/water_dripping_sound.mp3', "stream")
@@ -33,9 +33,9 @@ function Room3:init()
 
     -----------------------------------------------------LADDER---------------------------------------------------------------------------
     self.ladderToRoom2 = PlacableItems(560, 0, 180, 580, nil)
-    self.ladderToRoom2.render = function ()
-        love.graphics.rectangle("line", self.ladderToRoom2.x, self.ladderToRoom2.y, self.ladderToRoom2.width, self.ladderToRoom2.height)
-    end
+    -- self.ladderToRoom2.render = function ()
+    --     love.graphics.rectangle("line", self.ladderToRoom2.x, self.ladderToRoom2.y, self.ladderToRoom2.width, self.ladderToRoom2.height)
+    -- end
 
     -----------------------------------------WATER PIPELINE--------------------------------------------------------------------------------
     self.waterPipeLine = PlacableItems(450, 700, 150, 100, love.graphics.newImage('assets/room3/cock_off.png'))
@@ -52,6 +52,22 @@ function Room3:init()
         end
     end
 
+    --------------------------------------------------DIRT--------------------------------------------------------------------
+    self.Dirt = PlacableItems(430, 330, 140, 140, love.graphics.newImage('assets/room3/dirt.png'))
+    self.Dirt.visibleAlpha = 1
+    self.Dirt.erased = false
+    self.Dirt.render = function ()
+        love.graphics.setColor(1, 1, 1, self.Dirt.visibleAlpha)
+        love.graphics.draw(self.Dirt.image, self.Dirt.x, self.Dirt.y, 0, self.Dirt.width/self.Dirt.image:getWidth(), self.Dirt.height/self.Dirt.image:getHeight())
+        love.graphics.setColor(1, 1, 1)
+    end
+
+    self.soapAndWater = InventoryPlacableItems(400, 580, 80, 60, 8, love.graphics.newImage('assets/room3/soap.png'), "soap and water")
+
+    -----------------------------------------TOOL BOX----------------------------------------------------------------------------------
+    self.toolBox = PlacableItems(200, 580, 150, 100, love.graphics.newImage('assets/room3/toolBox.png'))
+    self.toolBoxPopup = PopupWindow(love.graphics.newImage('assets/room3/toolbox_closeup.png'), 2, 2)
+    self.toolBoxPopup.wrench = InventoryPlacableItems(450, 350, 300, 100, 7, love.graphics.newImage('assets/room3/wrench.png'), "wrench")
 
     --------------------------------------------WATER TANK----------------------------------------------------------
     self.waterTankInteractable = PlacableItems(850, 400, 262, 300, love.graphics.newImage('assets/room3/water_tank.png'))
@@ -96,6 +112,10 @@ function Room3:update(dt)
         self.mirrorInteractable.alpha = self.mirrorInteractable.alpha - dt
     end
 
+    if self.Dirt.erased then
+        self.Dirt.visibleAlpha = math.max(0, self.Dirt.visibleAlpha - dt)
+    end
+
     self.waterDropletWaiting = self.waterDropletWaiting + dt
     if self.waterDropletWaiting > self.waterDropletTimer then
         table.insert(self.allWaterDrops, WaterDrop(math.random(0, WINDOW_WIDTH), 0, 30, 30, self.waterDropletImage))
@@ -115,16 +135,30 @@ end
 
 function Room3:mousepressed(x, y, button, istouch)
     if button == 1 then
-        if (not self.waterTankPopup.active) then
+        if (not self.waterTankPopup.active) and (not self.toolBoxPopup.active) then
             -- if clicked on water tank
             if checkAABBCollision(x, y, self.waterTankInteractable) then
                 self.modifiedV.enable("boxblur")
                 -- self.modifiedV.disable("modified_vignette")
                 self.waterTankPopup.active = true
-            end  
+            end
+
+            if checkAABBCollision(x, y, self.toolBox) then
+                self.modifiedV.enable("boxblur")
+                self.toolBoxPopup.active = true
+            end
 
             if checkAABBCollision(x, y, self.ladderToRoom2) then
                 gStateMachine:change('room2')
+            end
+
+            if inventory.selectedItemId == 8 and  not self.Dirt.erased and checkAABBCollision(x, y, self.Dirt) then
+                self.Dirt.erased = true
+            end
+
+            if not self.soapAndWater.addedToInventory and checkAABBCollision(x, y, self.soapAndWater) then
+                inventory:insertItem(self.soapAndWater)
+                self.soapAndWater.addedToInventory = true
             end
 
             if checkAABBCollision(x, y, self.mirrorInteractable) then
@@ -145,8 +179,29 @@ function Room3:mousepressed(x, y, button, istouch)
                     self.modifiedV.enable("modified_vignette")
                 end
             end
+
+            if self.toolBoxPopup.active then
+                if CloseActivePopUpWindow(x, y, self.toolBoxPopup) then
+                    self.modifiedV.disable("boxblur")
+                end
+
+                if not self.toolBoxPopup.wrench.addedToInventory and checkAABBCollision(x, y, self.toolBoxPopup.wrench) then
+                    inventory:insertItem(self.toolBoxPopup.wrench)
+                    self.toolBoxPopup.wrench.addedToInventory = true
+                end
+            end
         end
+
+        inventory:mousepressed(x, y, button, istouch)
     end
+end
+
+function Room3:mousemoved(x, y, dx, dy, isTouch)
+    inventory:mousemoved(x, y, dx, dy, isTouch)
+end
+
+function Room3:mousereleased(x, y, button, isTouch)
+    inventory:mousereleased(x, y, button, isTouch)
 end
 
 function Room3:render()
@@ -154,17 +209,21 @@ function Room3:render()
         function ()
             love.graphics.draw(self.backgroundImage)
 
-            self.ladderToRoom2.render()
+            self.Dirt.render()
 
+            self.ladderToRoom2.render()
 
             love.graphics.setColor(1, 1, 1, self.mirrorInteractable.alpha)
             self.mirrorInteractable.render()
             love.graphics.setColor(1, 1, 1, 1)
-            
 
             self.sinkInteractable.render()
 
             self.waterTankInteractable.render()
+
+            self.toolBox.render()
+
+            self.soapAndWater.render()
 
             self.waterPipeLine.render()
             love.graphics.setColor(1, 1, 1, self.waterPipeLine.wireOnPipeline.alpha)
@@ -183,9 +242,14 @@ function Room3:render()
         love.graphics.setColor(1, 1, 1, 1)
     end
 
-    -- if self.waterTankPopupRevealed.active then
-    --     self.waterTankPopupRevealed.render()
-    -- end
+    if self.toolBoxPopup.active then
+        self.toolBoxPopup.render()
+        if not self.toolBoxPopup.wrench.addedToInventory then
+            self.toolBoxPopup.wrench.render()
+        end
+    end
+
+    inventory:render()
 end
 
 function Room3:exit()

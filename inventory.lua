@@ -29,7 +29,7 @@ end
 function Inventory:mousemoved(x, y, dx, dy, isTouch)
     if x > WINDOW_WIDTH - 100 and self.moveInventory then
         for key, value in pairs(self.items) do
-            value.y = value.y + dy / 2
+            value.y = value.y + dy
         end
     end
 end
