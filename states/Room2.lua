@@ -20,7 +20,9 @@ function Room2:pinPressed(x, y, buttons)
         if checkAABBCollision(x, y, value) then
             self.enterPinPopup.text = self.enterPinPopup.text .. tostring(value.value)
             if self.enterPinPopup.text == "2003" then
-                gStateMachine:change('room4')
+                --gStateMachine:change('room4')
+                self.startingTransition.enable("vignette")
+                self.LeavingScene4 = true
             end
             if #self.enterPinPopup.text == 4 and self.enterPinPopup.text ~= "2003" then
                 self.enterPinPopup.text = ""
@@ -32,6 +34,15 @@ end
 
 function Room2:init()
     self.id = 2
+
+    self.startingTransition = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.vignette)
+    self.startingTransition.vignette.opacity = 1
+    self.startingTransition.vignette.radius = 0
+    self.EnteringScene = true
+    self.LeavingScene3 = false
+    self.LeavingScene4 = false
+    self.startingTransitionRadius = 0
+
     self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
 
     self.beer_bottle = PlacableItems(890, 550, 100, 100, love.graphics.newImage('assets/room2/beer_bottle.png'))
@@ -380,15 +391,51 @@ function Room2:mousemoved(x, y, dx, dy, isTouch)
             self.popUpPaper.imageAlpha = self.popUpPaper.imageAlpha + 0.016 / 5
         end
     end
+
+    inventory:mousemoved(x, y, dx, dy, isTouch)
 end
 
 function Room2:mousereleased(x, y, button, isTouch)
     if self.popUpPaper.active then
         self.popUpPaper.eraserActive = false
     end
+
+
+    inventory:mousereleased(x, y, button, isTouch)
 end
 
 function Room2:update(dt)
+    if self.EnteringScene then
+        self.startingTransitionRadius = math.min(2, self.startingTransitionRadius + dt)
+        self.startingTransition.vignette.radius = self.startingTransitionRadius
+        if self.startingTransitionRadius >= 2 then
+            self.EnteringScene = false
+            self.startingTransition.disable("vignette")
+        end
+    end
+
+    if self.LeavingScene4 then
+        self.startingTransitionRadius = math.max(0, self.startingTransitionRadius - dt)
+        self.startingTransition.vignette.radius = self.startingTransitionRadius
+
+        if self.startingTransitionRadius <= 0 then
+            self.startingTransition.disable("vignette")
+            gStateMachine:change("room4")
+        end
+    end
+
+    if self.LeavingScene3 then
+        self.startingTransitionRadius = math.max(0, self.startingTransitionRadius - dt)
+        self.startingTransition.vignette.radius = self.startingTransitionRadius
+
+        if self.startingTransitionRadius <= 0 then
+            self.startingTransition.disable("vignette")
+            gStateMachine:change("room4")
+        end
+    end
+    
+    
+
     if self.photoframeInteractable.disappear then
         self.photoframeInteractable.alpha = self.photoframeInteractable.lerp(1, 0, self.photoframeInteractable.lerpProgress)
         self.photoframeInteractable.lerpProgress = self.photoframeInteractable.lerpProgress + dt
@@ -425,104 +472,109 @@ function Room2:update(dt)
 end
 
 function Room2:render()
-    if self.light.switchedOn then
-        love.graphics.setColor(1, 1, 1, 1)
-    else
-        love.graphics.setColor(0.6, 0.6, 0.6, 1)
-    end
-
-    self.popUpDustbin.blur(
+    self.startingTransition(
         function ()
-            love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
-
-            self.light.render()
-
-            self.dustBinInteractable.render()
-            self.switchInteractable.render()
-            self.storeRoomDoorInteractable.render()
-            self.locker.render()
-            self.locker.upper.render()
-            self.locker.lower.render()
-
-            self.carpet.key.render()
-            self.carpet.render()
-
-            self.beer_bottle.render()
-
-            self.electricBoard.render()
-
-            self.enterPinInteractive.render()
-
-            love.graphics.setColor(1, 1, 1, self.photoframeInteractable.alpha)
-            self.photoframeInteractable.render()
-            love.graphics.setColor(1, 1, 1)
-            self.paperBallInteractable.render()
-
-            self.crowbar.render()
+            if self.light.switchedOn then
+                love.graphics.setColor(1, 1, 1, 1)
+            else
+                love.graphics.setColor(0.6, 0.6, 0.6, 1)
+            end
+        
+            self.popUpDustbin.blur(
+                function ()
+                    love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
+        
+                    self.light.render()
+        
+                    self.dustBinInteractable.render()
+                    self.switchInteractable.render()
+                    self.storeRoomDoorInteractable.render()
+                    self.locker.render()
+                    self.locker.upper.render()
+                    self.locker.lower.render()
+        
+                    self.carpet.key.render()
+                    self.carpet.render()
+        
+                    self.beer_bottle.render()
+        
+                    self.electricBoard.render()
+        
+                    self.enterPinInteractive.render()
+        
+                    love.graphics.setColor(1, 1, 1, self.photoframeInteractable.alpha)
+                    self.photoframeInteractable.render()
+                    love.graphics.setColor(1, 1, 1)
+                    self.paperBallInteractable.render()
+        
+                    self.crowbar.render()
+                end
+            )
+        
+            if self.popUpDustbin.active then
+                love.graphics.setColor(1, 1, 1, self.popUpDustbin.alphaInitial)
+                love.graphics.draw(self.popUpDustbin.image, self.popUpDustbin.x, self.popUpDustbin.y, 0, self.popUpDustbin.width/self.popUpDustbin.image:getWidth(), self.popUpDustbin.height/self.popUpDustbin.image:getHeight())
+                if not self.screwdriver.addedToInventory then
+                    self.screwdriver.render()
+                end
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+        
+            if self.popUpPaper.active then
+                love.graphics.setColor(1, 1, 1, self.popUpPaper.imageAlpha)
+                love.graphics.draw(self.popUpPaper.image, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
+                love.graphics.setColor(1, 1, 1, self.popUpPaper.dirtyImageAlpha)
+                love.graphics.draw(self.popUpPaper.dirtyImage, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+        
+            if self.LowerlockerPopup.active then
+                love.graphics.setColor(1, 1, 1, self.LowerlockerPopup.alphaInitial)
+                love.graphics.draw(self.LowerlockerPopup.image, self.LowerlockerPopup.x, self.LowerlockerPopup.y, 0, self.LowerlockerPopup.width/self.LowerlockerPopup.image:getWidth(), self.LowerlockerPopup.height/self.LowerlockerPopup.image:getHeight())
+                if not self.LowerlockerPopup.rubber.addedToInventory then
+                    self.LowerlockerPopup.rubber.render()
+                end
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+        
+            if self.UpperlockerPopup.active then
+                love.graphics.setColor(1, 1, 1, self.UpperlockerPopup.alphaInitial)
+                love.graphics.draw(self.UpperlockerPopup.image, self.UpperlockerPopup.x, self.UpperlockerPopup.y, 0, self.UpperlockerPopup.width/self.UpperlockerPopup.image:getWidth(), self.UpperlockerPopup.height/self.UpperlockerPopup.image:getHeight())
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+        
+            if self.electricBoardPopup.active then
+                love.graphics.setColor(1, 1, 1, self.electricBoardPopup.alphaInitial)
+                self.electricBoardPopup.render()
+                self.electricBoardPopup.battery.render()
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+        
+            if self.enterPinPopup.active then
+                love.graphics.setColor(1, 1, 1, self.enterPinPopup.alphaInitial)
+                self.enterPinPopup.render()
+                love.graphics.setColor(1, 1, 1, 1)
+                for key, value in pairs(self.allButtons) do
+                    value:render()
+                end
+                for i = 1, math.min(4, #self.enterPinPopup.text) do
+                    love.graphics.setColor(self.textColor[i])
+                    love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
+                end
+            end
+        
+            if not self.light.switchedOn then
+                self.digit_glow.render()
+            end
+        
+            inventory:render()
+        
+            -- if MOUSE_ASSET ~= nil then
+            --     love.mouse.setVisible(false)
+            --     local mouseX, mouseY = push:toGame(love.mouse.getPosition())
+            --     love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+            -- end
         end
     )
-
-    if self.popUpDustbin.active then
-        love.graphics.setColor(1, 1, 1, self.popUpDustbin.alphaInitial)
-        love.graphics.draw(self.popUpDustbin.image, self.popUpDustbin.x, self.popUpDustbin.y, 0, self.popUpDustbin.width/self.popUpDustbin.image:getWidth(), self.popUpDustbin.height/self.popUpDustbin.image:getHeight())
-        if not self.screwdriver.addedToInventory then
-            self.screwdriver.render()
-        end
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    if self.popUpPaper.active then
-        love.graphics.setColor(1, 1, 1, self.popUpPaper.imageAlpha)
-        love.graphics.draw(self.popUpPaper.image, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
-        love.graphics.setColor(1, 1, 1, self.popUpPaper.dirtyImageAlpha)
-        love.graphics.draw(self.popUpPaper.dirtyImage, self.popUpPaper.x, self.popUpPaper.y, 0, self.popUpPaper.width/self.popUpPaper.image:getWidth(), self.popUpPaper.height/self.popUpPaper.image:getHeight())
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    if self.LowerlockerPopup.active then
-        love.graphics.setColor(1, 1, 1, self.LowerlockerPopup.alphaInitial)
-        love.graphics.draw(self.LowerlockerPopup.image, self.LowerlockerPopup.x, self.LowerlockerPopup.y, 0, self.LowerlockerPopup.width/self.LowerlockerPopup.image:getWidth(), self.LowerlockerPopup.height/self.LowerlockerPopup.image:getHeight())
-        if not self.LowerlockerPopup.rubber.addedToInventory then
-            self.LowerlockerPopup.rubber.render()
-        end
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    if self.UpperlockerPopup.active then
-        love.graphics.setColor(1, 1, 1, self.UpperlockerPopup.alphaInitial)
-        love.graphics.draw(self.UpperlockerPopup.image, self.UpperlockerPopup.x, self.UpperlockerPopup.y, 0, self.UpperlockerPopup.width/self.UpperlockerPopup.image:getWidth(), self.UpperlockerPopup.height/self.UpperlockerPopup.image:getHeight())
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    if self.electricBoardPopup.active then
-        love.graphics.setColor(1, 1, 1, self.electricBoardPopup.alphaInitial)
-        self.electricBoardPopup.render()
-        self.electricBoardPopup.battery.render()
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    if self.enterPinPopup.active then
-        love.graphics.setColor(1, 1, 1, self.enterPinPopup.alphaInitial)
-        self.enterPinPopup.render()
-        love.graphics.setColor(1, 1, 1, 1)
-        for key, value in pairs(self.allButtons) do
-            value:render()
-        end
-        for i = 1, #self.enterPinPopup.text do
-            love.graphics.setColor(self.textColor[i])
-            love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
-        end
-    end
-
-    if not self.light.switchedOn then
-        self.digit_glow.render()
-    end
-
-    inventory:render()
-
-    if MOUSE_ASSET ~= nil then
-        love.mouse.setVisible(false)
-        local mouseX, mouseY = push:toGame(love.mouse.getPosition())
-        love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
-    end
+    
 end
