@@ -12,11 +12,12 @@ require 'states.MainMenu'
 require 'states.RoomSelect'
 require 'states.TransitionToNextLevel'
 require 'states.helperFunctions'
+require 'inventory'
 require 'states.Room1'
 require 'states.Room2'
 require 'states.Room3'
 require 'states.Room4'
-require 'inventory'
+
 
 
 function love.load()
@@ -59,6 +60,66 @@ function love.load()
         LOCKED_ROOMS = decoded_content.unlockedTill
     else
         love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
+    end
+
+
+    -- for room 1
+    if love.filesystem.getInfo('inventorySaved.txt') then
+        content, size = love.filesystem.read('inventorySaved.txt')
+        savedItems1 = json.decode(content)
+        knife.addedToInventory = savedItems1.knife
+        key.addedToInventory = savedItems1.key
+
+        if savedItems1.knife == true then
+            inventory:insertItem(knife)
+        end
+        if savedItems1.key == true then
+            inventory:insertItem(key)
+        end
+    else
+        savedItems1 = {}
+        savedItems1.knife = false
+        savedItems1.key = false
+
+        love.filesystem.write('inventorySaved.txt', json.encode(savedItems1))
+    end
+
+    if love.filesystem.getInfo('inventorySaved1.txt') then
+        content, size = love.filesystem.read('inventorySaved1.txt')
+        savedItems2 = json.decode(content)
+
+        crowbar.addedToInventory = savedItems2.crowbar
+        brown_key.addedToInventory = savedItems2.brown_key
+        battery.addedToInventory = savedItems2.battery
+        eraser.addedToInventory = savedItems2.eraser
+        screwdriver.addedToInventory = savedItems2.screwDriver
+        storeRoomOpened = savedItems2.storeRoomOpened
+
+        if savedItems2.crowbar == true then
+            inventory:insertItem(crowbar)
+        end
+        if savedItems2.brown_key == true then
+            inventory:insertItem(brown_key)
+        end
+        if savedItems2.battery == true then
+            inventory:insertItem(battery)
+        end
+        if savedItems2.eraser == true then
+            inventory:insertItem(eraser)
+        end
+        if savedItems2.screwDriver == true then
+            inventory:insertItem(screwdriver)
+        end
+    else
+        savedItems2 = {}
+        savedItems2.crowbar = false
+        savedItems2.brown_key = false
+        savedItems2.battery = false
+        savedItems2.eraser = false
+        savedItems2.screwDriver = false
+        savedItems2.storeRoomOpened = false
+
+        love.filesystem.write('inventorySaved1.txt', json.encode(savedItems2))
     end
 
     gStateMachine:change('mainMenu')

@@ -3,47 +3,12 @@ require 'gui.dialougeBox'
 
 function Room1:init()
     self.id = 1
-    -- self.hdrphoto = love.graphics.newImage('assets/hdr_photo.jpg')
-
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
-    -- self.startingVideo:play()
+    self.startingVideo:play()
 
     -- will store all the items that can be obtained
     self.items = {}
-
-    -- knife
-    self.knife = {}
-    self.knife.id = 1   -- use this id to access the items in an array 
-    self.knife.width = 80
-    self.knife.height = 80
-    self.knife.x = 800
-    self.knife.y = 580
-    self.knife.addedToInventory = false
-    self.knife.image = love.graphics.newImage('assets/knife.png')
-    self.knife.name = "knife"
-    self.knife.render = function ()
-        if not self.knife.addedToInventory then
-            -- there is a problem in this line which causes problem in collision detection due to the rotation of the image
-            love.graphics.draw(self.knife.image, self.knife.x, self.knife.y, 0.6, self.knife.width/self.knife.image:getWidth(), self.knife.height/self.knife.image:getHeight())
-        end
-    end
-
-    -- key
-    self.key = {}
-    self.key.id = 2
-    self.key.width = 30
-    self.key.height = 30
-    self.key.x = 400
-    self.key.y = 550
-    self.key.addedToInventory = false
-    self.key.image = love.graphics.newImage('assets/key.png')
-    self.key.name = "key"
-    self.key.render = function ()
-        if not self.key.addedToInventory then
-            love.graphics.draw(self.key.image, self.key.x, self.key.y, 0, self.key.width/self.key.image:getWidth(), self.key.height/self.key.image:getHeight())
-        end
-    end
 
     -- key holes
     self.keyhole = {}
@@ -76,8 +41,8 @@ function Room1:init()
     self.leftRoomButton.x = 100
     self.leftRoomButton.y = WINDOW_HEIGHT/2 - self.leftRoomButton.height/2
 
-    table.insert(self.items, self.knife)
-    table.insert(self.items, self.key)
+    table.insert(self.items, knife)
+    table.insert(self.items, key)
 
     -- tutorial red blinking
     self.tutorialRed = 0
@@ -120,27 +85,6 @@ function Room1:init()
     self.nextLevelTransition.disable("vignette")
     self.nextLevelTransition.vignette.opacity = 1
     self.nextLevelTransitionRadius = 1
-
-
-    -------------ITEMS ADDED TO INVENTORY SAVE FILE---------------------------------------
-    if love.filesystem.getInfo('inventorySaved.txt') then
-        content, size = love.filesystem.read('inventorySaved.txt')
-        self.savedItems = json.decode(content)
-        self.key.addedToInventory = self.savedItems.key
-        self.knife.addedToInventory = self.savedItems.knife
-
-        if self.savedItems.key == true then
-            inventory:insertItem(self.key)
-        end
-        if self.savedItems.knife == true then
-            inventory:insertItem(self.knife)
-        end
-    else
-        self.savedItems = {}
-        self.savedItems.key = false
-        self.savedItems.knife = false
-        love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
-    end
 end
 
 function Room1:mousemoved(x, y, dx, dy, isTouch)
@@ -165,11 +109,11 @@ function Room1:mousepressed(x, y, button)
                     if x > item.x and x < item.x + item.width and y > item.y and y < item.y + item.height then
                         item.addedToInventory = true
                         if item.name == "key" then
-                            self.savedItems.key = true
-                            love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
+                            savedItems1.key = true
+                            love.filesystem.write('inventorySaved.txt', json.encode(savedItems1))
                         elseif item.name == "knife" then
-                            self.savedItems.knife = true
-                            love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
+                            savedItems1.knife = true
+                            love.filesystem.write('inventorySaved.txt', json.encode(savedItems1))
                         end
                         inventory:insertItem(item)
                     end
@@ -184,11 +128,11 @@ function Room1:mousepressed(x, y, button)
                 self.popUpWindowKey.blur.disable("boxblur")
             else
                 -- the user clears the stage
-                if (x > self.popUpWindowKey.x and x < self.popUpWindowKey.x + self.popUpWindowKey.width and y > self.popUpWindowKey.y and y < self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) and inventory.selectedItemId == self.key.id then
+                if (x > self.popUpWindowKey.x and x < self.popUpWindowKey.x + self.popUpWindowKey.width and y > self.popUpWindowKey.y and y < self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) and inventory.selectedItemId == key.id then
                     self.endScreenTransitionTrigger = true
                     self.nextLevelTransition.enable("vignette")
                     --- unlock the next room
-                    LOCKED_ROOMS = math.min(LOCKED_ROOMS + 1, 2)
+                    LOCKED_ROOMS = math.max(LOCKED_ROOMS, 2)
                     -- save the progress to the new file
                     love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = LOCKED_ROOMS}))
                 end
