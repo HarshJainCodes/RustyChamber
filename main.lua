@@ -49,6 +49,7 @@ function love.load()
     MOUSE_ASSET = nil
     inventory = Inventory()
 
+
     -- this is by default
     LOCKED_ROOMS = 1
     if love.filesystem.getInfo("locked_rooms.txt") then
@@ -60,7 +61,7 @@ function love.load()
         love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = 1}))
     end
 
-    gStateMachine:change('room3')
+    gStateMachine:change('mainMenu')
 end
 
 function love.resize(w, h)

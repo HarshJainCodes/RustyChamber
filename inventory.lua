@@ -7,18 +7,21 @@ function Inventory:init()
     self.image = love.graphics.newImage('assets/inventory/inventory_box.png')
 end
 
-function Inventory:mousepressed(x, y)
-
-    if x > WINDOW_WIDTH - 100 then
-        self.moveInventory = true
-    end
-
-    for key, value in pairs(self.items) do
-        if (x > WINDOW_WIDTH - 100 and y > value.y and y < value.y + 100) then
-            self.selectedItemId = value.id
-            MOUSE_ASSET = value.image
-            -- print(self.selectedItemId)
+function Inventory:mousepressed(x, y, button)
+    if button == 1 then
+        if x > WINDOW_WIDTH - 100 then
+            self.moveInventory = true
         end
+        for key, value in pairs(self.items) do
+            if (x > WINDOW_WIDTH - 100 and y > value.y and y < value.y + 100) then
+                self.selectedItemId = value.id
+                MOUSE_ASSET = value.image
+                -- print(self.selectedItemId)
+            end
+        end
+    elseif button == 2 then
+        self.selectedItemId = nil
+        MOUSE_ASSET = nil
     end
 end
 
@@ -57,7 +60,7 @@ function Inventory:insertItem(name)
         itemToBeAdded.image = name.image
         itemToBeAdded.id = name.id
     end
-
+    name.addedToInventory = true
     itemToBeAdded.name = name.name
 
     table.insert(self.items, itemToBeAdded)

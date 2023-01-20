@@ -120,6 +120,27 @@ function Room1:init()
     self.nextLevelTransition.disable("vignette")
     self.nextLevelTransition.vignette.opacity = 1
     self.nextLevelTransitionRadius = 1
+
+
+    -------------ITEMS ADDED TO INVENTORY SAVE FILE---------------------------------------
+    if love.filesystem.getInfo('inventorySaved.txt') then
+        content, size = love.filesystem.read('inventorySaved.txt')
+        self.savedItems = json.decode(content)
+        self.key.addedToInventory = self.savedItems.key
+        self.knife.addedToInventory = self.savedItems.knife
+
+        if self.savedItems.key == true then
+            inventory:insertItem(self.key)
+        end
+        if self.savedItems.knife == true then
+            inventory:insertItem(self.knife)
+        end
+    else
+        self.savedItems = {}
+        self.savedItems.key = false
+        self.savedItems.knife = false
+        love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
+    end
 end
 
 function Room1:mousemoved(x, y, dx, dy, isTouch)
@@ -143,6 +164,13 @@ function Room1:mousepressed(x, y, button)
                 if not item.addedToInventory then
                     if x > item.x and x < item.x + item.width and y > item.y and y < item.y + item.height then
                         item.addedToInventory = true
+                        if item.name == "key" then
+                            self.savedItems.key = true
+                            love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
+                        elseif item.name == "knife" then
+                            self.savedItems.knife = true
+                            love.filesystem.write('inventorySaved.txt', json.encode(self.savedItems))
+                        end
                         inventory:insertItem(item)
                     end
                 end
@@ -153,13 +181,14 @@ function Room1:mousepressed(x, y, button)
                 self.popUpWindowKey.active = false
                 self.popUpWindowKey.alphaInitial = 0
                 self.popUpWindowKey.alphaProgress = 0
+                self.popUpWindowKey.blur.disable("boxblur")
             else
                 -- the user clears the stage
                 if (x > self.popUpWindowKey.x and x < self.popUpWindowKey.x + self.popUpWindowKey.width and y > self.popUpWindowKey.y and y < self.popUpWindowKey.y + self.popUpWindowKey.height) and (x < WINDOW_WIDTH - 100) and inventory.selectedItemId == self.key.id then
                     self.endScreenTransitionTrigger = true
                     self.nextLevelTransition.enable("vignette")
                     --- unlock the next room
-                    LOCKED_ROOMS = LOCKED_ROOMS + 1
+                    LOCKED_ROOMS = math.min(LOCKED_ROOMS + 1, 2)
                     -- save the progress to the new file
                     love.filesystem.write("locked_rooms.txt", json.encode({unlockedTill = LOCKED_ROOMS}))
                 end

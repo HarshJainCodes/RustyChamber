@@ -20,7 +20,6 @@ function Room2:pinPressed(x, y, buttons)
         if checkAABBCollision(x, y, value) then
             self.enterPinPopup.text = self.enterPinPopup.text .. tostring(value.value)
             if self.enterPinPopup.text == "2003" then
-                --gStateMachine:change('room4')
                 self.startingTransition.enable("vignette")
                 self.LeavingScene4 = true
             end
@@ -141,7 +140,9 @@ function Room2:init()
 
     ---------------------------------------------CONTAINS STORE ROOM DOOR INTERACTIVE CODE ------------------------------------------------------------------
 
+    self.storeRoomOpened = false
     self.storeRoomDoorInteractable = PlacableItems(560, 650, 200, 133, love.graphics.newImage('assets/room2/store_room_door.png'))
+    self.storeRoomDoorRevealed = PlacableItems(560, 650, 200, 133, love.graphics.newImage('assets/room2/store_room_door_open.png'))
 
     ---------------------------------------------CONTAINS PHOTO FRAME INTERACTIVE CODE --------------------------------------------------------------------
     self.photoframeInteractable = {}
@@ -227,16 +228,55 @@ function Room2:init()
     self.screwdriver = InventoryPlacableItems(600, 350, 100, 200, 3, love.graphics.newImage('assets/room2/screwdriver.png'), "screwdriver")
 
     self.crowbar = InventoryPlacableItems(1000, 650, 100, 100, 4, love.graphics.newImage('assets/room2/crowbar.png'), "crowbar")
+
+
+    --------------------items added to inventory saved--------------------------------
+    if love.filesystem.getInfo('inventorySaved1.txt') then
+        content, size = love.filesystem.read('inventorySaved1.txt')
+        self.savedItems = json.decode(content)
+
+        self.crowbar.addedToInventory = self.savedItems.crowbar
+        self.carpet.key.addedToInventory = self.savedItems.brown_key
+
+        if self.savedItems.crowbar == true then
+            inventory:insertItem(self.crowbar)
+        end
+        if self.savedItems.brown_key == true then
+            inventory:insertItem(self.carpet.key)
+        end
+        if self.savedItems.battery == true then
+            inventory:insertItem(self.electricBoardPopup.battery)
+        end
+        if self.savedItems.eraser == true then
+            inventory:insertItem(self.LowerlockerPopup.rubber)
+        end
+        if self.savedItems.screwDriver == true then
+            inventory:insertItem(self.screwdriver)
+        end
+        if self.savedItems.storeRoomOpened == true then
+            self.storeRoomOpened = self.savedItems.storeRoomOpened
+        end
+    else
+        self.savedItems = {}
+        self.savedItems.crowbar = false
+        self.savedItems.brown_key = false
+        self.savedItems.battery = false
+        self.savedItems.eraser = false
+        self.savedItems.screwDriver = false
+        self.savedItems.storeRoomOpened = false
+
+        love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
+    end
 end
 
 
 function UpdateAlphaBlurVariables(object, dt)
     object.alphaProgress = object.alphaProgress + dt
-        object.alphaInitial = object.lerp(0, 1, object.alphaProgress)
+    object.alphaInitial = object.lerp(0, 1, object.alphaProgress)
 
-        if object.alphaInitial > object.alphaFinal then
-            object.alphaInitial = object.alphaFinal
-        end
+    if object.alphaInitial > object.alphaFinal then
+        object.alphaInitial = object.alphaFinal
+    end
 end
 
 function Room2:mousepressed(x, y, button, isTouch)
@@ -288,15 +328,30 @@ function Room2:mousepressed(x, y, button, isTouch)
             end
 
             if self.carpet.slideCarpet then
-                if checkAABBCollision(x, y, self.carpet.key) then
+                if  self.carpet.key.addedToInventory == false and checkAABBCollision(x, y, self.carpet.key) then
                     self.carpet.key.addedToInventory = true
                     inventory:insertItem(self.carpet.key)
+
+                    self.savedItems.brown_key = true
+                    love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
                 end
             end
 
             -- if clicked on carpet
             if checkAABBCollision(x, y, self.carpet) then
                 self.carpet.slideCarpet = true
+            end
+
+            if self.storeRoomOpened and checkAABBCollision(x, y, self.storeRoomDoorRevealed) then
+                self.LeavingScene3 = true
+                self.startingTransition.enable("vignette")
+            end
+
+            -- reveal the door to the basement
+            if inventory.selectedItemId == 4 and self.storeRoomOpened == false and checkAABBCollision(x, y, self.storeRoomDoorInteractable) then
+                self.storeRoomOpened = true
+                self.savedItems.storeRoomOpened = true
+                love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
             end
 
             -- if pressed on photo frame then disappear the photo frame
@@ -319,6 +374,9 @@ function Room2:mousepressed(x, y, button, isTouch)
             if self.crowbar.addedToInventory == false and x > self.crowbar.x and x < self.crowbar.x + self.crowbar.width and y > self.crowbar.y and y < self.crowbar.y + self.crowbar.height then
                 self.crowbar.addedToInventory = true
                 inventory:insertItem(self.crowbar)
+
+                self.savedItems.crowbar = true
+                love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
             end
         else
             -- when dustbin popup is active
@@ -353,7 +411,7 @@ function Room2:mousepressed(x, y, button, isTouch)
             if self.enterPinPopup.active then
                 self:pinPressed(x, y, self.allButtons)
             end
- 
+
             if self.popUpPaper.active then
                 self.popUpPaper.eraserActive = true
             end
@@ -362,6 +420,9 @@ function Room2:mousepressed(x, y, button, isTouch)
                 if checkAABBCollision(x, y, self.screwdriver) then
                     self.screwdriver.addedToInventory = true
                     inventory:insertItem(self.screwdriver)
+
+                    self.savedItems.screwDriver = true
+                    love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
                 end
             end
 
@@ -369,19 +430,24 @@ function Room2:mousepressed(x, y, button, isTouch)
                 if checkAABBCollision(x, y, self.LowerlockerPopup.rubber) then
                     self.LowerlockerPopup.rubber.addedToInventory = true
                     inventory:insertItem(self.LowerlockerPopup.rubber)
+
+                    self.savedItems.eraser = true
+                    love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
                 end
             end
 
             if self.electricBoardPopup.active and not self.electricBoardPopup.battery.addedToInventory then
-                if checkAABBCollision(x, y, self.electricBoardPopup.battery) then
+                if self.electricBoardPopup.battery.addedToInventory == false and checkAABBCollision(x, y, self.electricBoardPopup.battery) then
                     self.electricBoardPopup.battery.addedToInventory = true
                     inventory:insertItem(self.electricBoardPopup.battery)
+
+                    self.savedItems.battery = true
+                    love.filesystem.write('inventorySaved1.txt', json.encode(self.savedItems))
                 end
             end
         end
-
-        inventory:mousepressed(x, y)
     end
+    inventory:mousepressed(x, y, button)
 end
 
 function Room2:mousemoved(x, y, dx, dy, isTouch)
@@ -430,10 +496,9 @@ function Room2:update(dt)
 
         if self.startingTransitionRadius <= 0 then
             self.startingTransition.disable("vignette")
-            gStateMachine:change("room4")
+            gStateMachine:change("room3")
         end
     end
-    
     
 
     if self.photoframeInteractable.disappear then
@@ -479,7 +544,7 @@ function Room2:render()
             else
                 love.graphics.setColor(0.6, 0.6, 0.6, 1)
             end
-        
+
             self.popUpDustbin.blur(
                 function ()
                     love.graphics.draw(self.backgroundImage, 0, 0, 0, WINDOW_WIDTH/self.backgroundImage:getWidth(), WINDOW_HEIGHT/self.backgroundImage:getHeight())
@@ -488,7 +553,12 @@ function Room2:render()
         
                     self.dustBinInteractable.render()
                     self.switchInteractable.render()
-                    self.storeRoomDoorInteractable.render()
+                    if self.storeRoomOpened then
+                        self.storeRoomDoorRevealed.render()
+                    else
+                        self.storeRoomDoorInteractable.render()
+                    end
+                    
                     self.locker.render()
                     self.locker.upper.render()
                     self.locker.lower.render()
@@ -562,19 +632,18 @@ function Room2:render()
                     love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
                 end
             end
-        
+
             if not self.light.switchedOn then
                 self.digit_glow.render()
             end
-        
+
             inventory:render()
-        
-            -- if MOUSE_ASSET ~= nil then
-            --     love.mouse.setVisible(false)
-            --     local mouseX, mouseY = push:toGame(love.mouse.getPosition())
-            --     love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
-            -- end
+
+            if MOUSE_ASSET ~= nil then
+                --love.mouse.setVisible(false)
+                local mouseX, mouseY = push:toGame(love.mouse.getPosition())
+                love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+            end
         end
     )
-    
 end
