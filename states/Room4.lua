@@ -106,7 +106,7 @@ function Room4:mousepressed(x, y, button, isTouch)
             self.blurEff.enable('boxblur')
         end
 
-        if checkAABBCollision(x, y, self.switchBoard) then
+        if not self.switchBoardPopup.completedPhase1 and checkAABBCollision(x, y, self.switchBoard) then
             self.switchBoardPopup.active = true
             self.blurEff.enable("boxblur")
         end
