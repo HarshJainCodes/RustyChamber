@@ -26,7 +26,7 @@ function love.load()
         fullscreen = false,
         resizable = true,
         stretched = false,
-        fullscreentype = "windows",
+        -- fullscreentype = "android",
         highdpi = true,
         usedpiscale = true
     })
