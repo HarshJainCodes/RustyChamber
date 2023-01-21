@@ -5,7 +5,7 @@ function Room1:init()
     self.id = 1
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
-    self.startingVideo:play()
+    -- self.startingVideo:play()
 
     -- will store all the items that can be obtained
     self.items = {}
@@ -181,9 +181,6 @@ function Room1:update(dt)
     if self.endScreenTransitionTrigger then
         self.nextLevelTransitionRadius = self.nextLevelTransitionRadius - dt
         self.nextLevelTransition.vignette.radius = self.nextLevelTransitionRadius 
-    end
-    if love.keyboard.isDown("return") then
-        gStateMachine:change('room' .. tostring(self.id + 1))
     end
 
     if not self.startingVideo:isPlaying() then

@@ -84,6 +84,7 @@ function love.load()
         love.filesystem.write('inventorySaved.txt', json.encode(savedItems1))
     end
 
+    -- for room 2
     if love.filesystem.getInfo('inventorySaved1.txt') then
         content, size = love.filesystem.read('inventorySaved1.txt')
         savedItems2 = json.decode(content)
@@ -122,7 +123,32 @@ function love.load()
         love.filesystem.write('inventorySaved1.txt', json.encode(savedItems2))
     end
 
-    gStateMachine:change('mainMenu')
+    -- for room 3
+    if love.filesystem.getInfo('inventorySaved2.txt') then
+        content, size = love.filesystem.read('inventorySaved2.txt')
+        savedItems2 = json.decode(content)
+        wrench.addedToInventory = savedItems2.wrench
+        soapAndWater.addedToInventory = savedItems2.soapAndWater
+        mirrorHidden = savedItems2.mirrorHidden
+        dirtErased = savedItems2.dirtErased
+
+        if savedItems2.wrench == true then
+            inventory:insertItem(wrench)
+        end
+        if savedItems2.soapAndWater == true then
+            inventory:insertItem(soapAndWater)
+        end
+    else
+        savedItems2 = {}
+        savedItems2.wrench = false
+        savedItems2.soapAndWater = false
+        savedItems2.mirrorHidden = false
+        savedItems2.dirtErased = false
+
+        love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
+    end
+
+    gStateMachine:change('room4')
 end
 
 function love.resize(w, h)
@@ -133,6 +159,7 @@ function love.keypressed(key)
     if key == 'escape' then
         love.event.quit()
     end
+
     gStateMachine.current:keypressed(key)
 end
 
@@ -146,7 +173,9 @@ end
 
 function love.mousepressed(x, y, button)
     x1, y1 = push:toGame(x, y)
-    gStateMachine.current:mousepressed(x1, y1, button)
+    if x1 ~= nil and y1 ~= nil then
+        gStateMachine.current:mousepressed(x1, y1, button)
+    end
 end
 
 function love.mousereleased(x, y, button)

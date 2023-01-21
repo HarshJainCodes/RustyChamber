@@ -41,6 +41,7 @@ function Room2:init()
     self.LeavingScene3 = false
     self.LeavingScene4 = false
     self.startingTransitionRadius = 0
+    self.leavingTransitionRadius = 1
 
     self.backgroundImage = love.graphics.newImage('assets/room2/room2background.png')
 
@@ -201,6 +202,10 @@ function Room2:init()
     -------------------------------------------------LOWER LOCKER POPUP----------------------------------------------------------------------------------
 
     self.LowerlockerPopup = PopupWindow(love.graphics.newImage('assets/room2/drawer_locker.png'), 1, 1)
+
+
+    ------------------------------------------SOUNDS-------------------------
+    self.switchOnSound = love.audio.newSource('assets/room2/switchSound.mp3', "stream")
 end
 
 
@@ -279,6 +284,7 @@ function Room2:mousepressed(x, y, button, isTouch)
             if storeRoomOpened and checkAABBCollision(x, y, self.storeRoomDoorRevealed) then
                 self.LeavingScene3 = true
                 self.startingTransition.enable("vignette")
+                self.leavingTransitionRadius = 1
             end
 
             -- reveal the door to the basement
@@ -302,6 +308,8 @@ function Room2:mousepressed(x, y, button, isTouch)
                     self.switchInteractable.switchStatus = "on"
                     self.light.switchedOn = true
                 end
+                self.switchOnSound:stop()
+                self.switchOnSound:play()
             end
 
             -- add the screwbar once clicked on it
@@ -405,16 +413,18 @@ function Room2:mousereleased(x, y, button, isTouch)
 end
 
 function Room2:update(dt)
-    if self.EnteringScene then
+    if self.EnteringScene == true then
+        print("entering scene" .. tostring(self.startingTransitionRadius))
         self.startingTransitionRadius = math.min(2, self.startingTransitionRadius + dt)
         self.startingTransition.vignette.radius = self.startingTransitionRadius
         if self.startingTransitionRadius >= 2 then
             self.EnteringScene = false
             self.startingTransition.disable("vignette")
+            
         end
     end
 
-    if self.LeavingScene4 then
+    if self.LeavingScene4 == true then
         self.startingTransitionRadius = math.max(0, self.startingTransitionRadius - dt)
         self.startingTransition.vignette.radius = self.startingTransitionRadius
 
@@ -426,11 +436,11 @@ function Room2:update(dt)
         end
     end
 
-    if self.LeavingScene3 then
-        self.startingTransitionRadius = math.max(0, self.startingTransitionRadius - dt)
-        self.startingTransition.vignette.radius = self.startingTransitionRadius
+    if self.LeavingScene3 == true then
+        self.leavingTransitionRadius = self.leavingTransitionRadius - dt
+        self.startingTransition.vignette.radius = self.leavingTransitionRadius
 
-        if self.startingTransitionRadius <= 0 then
+        if self.leavingTransitionRadius <= 0 then
             LOCKED_ROOMS = math.max(LOCKED_ROOMS, 3)
             love.filesystem.write('locked_rooms.txt', json.encode({unlockedTill = LOCKED_ROOMS}))
             self.startingTransition.disable("vignette")
@@ -569,6 +579,7 @@ function Room2:render()
                     love.graphics.setColor(self.textColor[i])
                     love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
                 end
+                love.graphics.setColor(1, 1, 1, 1)
             end
 
             if not self.light.switchedOn then
@@ -580,7 +591,9 @@ function Room2:render()
             if MOUSE_ASSET ~= nil then
                 --love.mouse.setVisible(false)
                 local mouseX, mouseY = push:toGame(love.mouse.getPosition())
-                love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+                if mouseX ~= nil and mouseY ~= nil then
+                    love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+                end
             end
         end
     )

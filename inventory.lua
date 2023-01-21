@@ -62,6 +62,11 @@ eraser = InventoryPlacableItems(400, 400, 109, 70, 5, love.graphics.newImage('as
 screwdriver = InventoryPlacableItems(600, 350, 100, 200, 3, love.graphics.newImage('assets/room2/screwdriver.png'), "screwdriver")
 storeRoomOpened = false
 
+wrench = InventoryPlacableItems(450, 350, 300, 100, 7, love.graphics.newImage('assets/room3/wrench.png'), "wrench")
+soapAndWater = InventoryPlacableItems(400, 580, 80, 60, 8, love.graphics.newImage('assets/room3/soap.png'), "soap and water")
+mirorHidden = false
+dirtErased = false
+
 function Inventory:mousepressed(x, y, button)
     if button == 1 then
         if x > WINDOW_WIDTH - 100 then

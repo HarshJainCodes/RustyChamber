@@ -55,19 +55,15 @@ function Room3:init()
     --------------------------------------------------DIRT--------------------------------------------------------------------
     self.Dirt = PlacableItems(430, 330, 140, 140, love.graphics.newImage('assets/room3/dirt.png'))
     self.Dirt.visibleAlpha = 1
-    self.Dirt.erased = false
     self.Dirt.render = function ()
         love.graphics.setColor(1, 1, 1, self.Dirt.visibleAlpha)
         love.graphics.draw(self.Dirt.image, self.Dirt.x, self.Dirt.y, 0, self.Dirt.width/self.Dirt.image:getWidth(), self.Dirt.height/self.Dirt.image:getHeight())
         love.graphics.setColor(1, 1, 1)
     end
 
-    self.soapAndWater = InventoryPlacableItems(400, 580, 80, 60, 8, love.graphics.newImage('assets/room3/soap.png'), "soap and water")
-
     -----------------------------------------TOOL BOX----------------------------------------------------------------------------------
     self.toolBox = PlacableItems(200, 580, 150, 100, love.graphics.newImage('assets/room3/toolBox.png'))
     self.toolBoxPopup = PopupWindow(love.graphics.newImage('assets/room3/toolbox_closeup.png'), 2, 2)
-    self.toolBoxPopup.wrench = InventoryPlacableItems(450, 350, 300, 100, 7, love.graphics.newImage('assets/room3/wrench.png'), "wrench")
 
     --------------------------------------------WATER TANK----------------------------------------------------------
     self.waterTankInteractable = PlacableItems(850, 400, 262, 300, love.graphics.newImage('assets/room3/water_tank.png'))
@@ -90,7 +86,7 @@ function Room3:init()
 
     --------------------------------------------------MIRROR----------------------------------------------------------------------------------
     self.mirrorInteractable = PlacableItems(200, 210, 200, 200, love.graphics.newImage('assets/room3/mirror.png'))
-    self.mirrorInteractable.hidden = false
+    -- self.mirrorInteractable.hidden = false
     self.mirrorInteractable.alpha = 1
 
     ----------------------------------------------------------------------------------------------------------------------
@@ -108,11 +104,11 @@ function Room3:update(dt)
         self.modifiedV.modified_vignette.position = {mouseX, mouseY}
     end
 
-    if self.mirrorInteractable.hidden then
+    if mirrorHidden then
         self.mirrorInteractable.alpha = self.mirrorInteractable.alpha - dt
     end
 
-    if self.Dirt.erased then
+    if dirtErased then
         self.Dirt.visibleAlpha = math.max(0, self.Dirt.visibleAlpha - dt)
     end
 
@@ -152,17 +148,26 @@ function Room3:mousepressed(x, y, button, istouch)
                 gStateMachine:change('room2')
             end
 
-            if inventory.selectedItemId == 8 and  not self.Dirt.erased and checkAABBCollision(x, y, self.Dirt) then
-                self.Dirt.erased = true
+            if inventory.selectedItemId == 8 and  not dirtErased and checkAABBCollision(x, y, self.Dirt) then
+                dirtErased = true
+
+                savedItems2.dirtErased = true
+                love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
             end
 
-            if not self.soapAndWater.addedToInventory and checkAABBCollision(x, y, self.soapAndWater) then
-                inventory:insertItem(self.soapAndWater)
-                self.soapAndWater.addedToInventory = true
+            if not soapAndWater.addedToInventory and checkAABBCollision(x, y, soapAndWater) then
+                inventory:insertItem(soapAndWater)
+                soapAndWater.addedToInventory = true
+
+                savedItems2.soapAndWater = true
+                love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
             end
 
             if checkAABBCollision(x, y, self.mirrorInteractable) then
-                self.mirrorInteractable.hidden = true
+                mirrorHidden = true
+
+                savedItems2.mirrorHidden = true
+                love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
             end
             if self.waterPipeLine.removedDirt and checkAABBCollision(x, y, self.waterPipeLine) then
                 self.waterPipeLine.PlaceOnCock = true
@@ -185,15 +190,17 @@ function Room3:mousepressed(x, y, button, istouch)
                     self.modifiedV.disable("boxblur")
                 end
 
-                if not self.toolBoxPopup.wrench.addedToInventory and checkAABBCollision(x, y, self.toolBoxPopup.wrench) then
-                    inventory:insertItem(self.toolBoxPopup.wrench)
-                    self.toolBoxPopup.wrench.addedToInventory = true
+                if not wrench.addedToInventory and checkAABBCollision(x, y, wrench) then
+                    inventory:insertItem(wrench)
+                    wrench.addedToInventory = true
+
+                    savedItems2.wrench = true
+                    love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
                 end
             end
-        end
-
-        inventory:mousepressed(x, y, button, istouch)
+        end        
     end
+    inventory:mousepressed(x, y, button, istouch)
 end
 
 function Room3:mousemoved(x, y, dx, dy, isTouch)
@@ -223,7 +230,7 @@ function Room3:render()
 
             self.toolBox.render()
 
-            self.soapAndWater.render()
+            soapAndWater.render()
 
             self.waterPipeLine.render()
             love.graphics.setColor(1, 1, 1, self.waterPipeLine.wireOnPipeline.alpha)
@@ -244,12 +251,20 @@ function Room3:render()
 
     if self.toolBoxPopup.active then
         self.toolBoxPopup.render()
-        if not self.toolBoxPopup.wrench.addedToInventory then
-            self.toolBoxPopup.wrench.render()
+        if not wrench.addedToInventory then
+            wrench.render()
         end
     end
 
     inventory:render()
+
+    if MOUSE_ASSET ~= nil then
+        --love.mouse.setVisible(false)
+        local mouseX, mouseY = push:toGame(love.mouse.getPosition())
+        if mouseX ~= nil and mouseY ~= nil then
+            love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
+        end
+    end
 end
 
 function Room3:exit()
