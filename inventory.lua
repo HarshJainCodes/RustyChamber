@@ -57,12 +57,12 @@ brown_key.render = function ()
     end
 end
 
-battery = InventoryPlacableItems(WINDOW_WIDTH/2 - 25, 550, 50, 100, 7, love.graphics.newImage('assets/room2/battery.png'), "battery")
+battery = InventoryPlacableItems(WINDOW_WIDTH/2 - 25, 550, 50, 100, 6, love.graphics.newImage('assets/room2/battery.png'), "battery")
 eraser = InventoryPlacableItems(400, 400, 109, 70, 5, love.graphics.newImage('assets/room2/eraser.png'), "Eraser")
 screwdriver = InventoryPlacableItems(600, 350, 100, 200, 3, love.graphics.newImage('assets/room2/screwdriver.png'), "screwdriver")
 storeRoomOpened = false
 
-wrench = InventoryPlacableItems(450, 350, 300, 100, 7, love.graphics.newImage('assets/room3/wrench.png'), "wrench")
+wrench = InventoryPlacableItems(450, 350, 300, 100, 11, love.graphics.newImage('assets/room3/wrench.png'), "wrench")
 soapAndWater = InventoryPlacableItems(400, 580, 80, 60, 8, love.graphics.newImage('assets/room3/soap.png'), "soap and water")
 mirorHidden = false
 dirtErased = false

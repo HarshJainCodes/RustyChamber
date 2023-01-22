@@ -17,6 +17,7 @@ require 'states.Room1'
 require 'states.Room2'
 require 'states.Room3'
 require 'states.Room4'
+require 'states.Room5'
 
 
 
@@ -44,6 +45,7 @@ function love.load()
         ['room2'] = function() return Room2() end,
         ['room3'] = function () return Room3() end,
         ['room4'] = function () return Room4() end,
+        ['room5'] = function () return Room5() end,
         ['stateTransition'] = function () return TransitionToNextLevel() end
     }
 
@@ -148,7 +150,7 @@ function love.load()
         love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
     end
 
-    gStateMachine:change('room4')
+    gStateMachine:change('room5')
 end
 
 function love.resize(w, h)

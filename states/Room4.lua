@@ -44,7 +44,7 @@ function CircuitResistor:init(x, y, width, height, image, value)
 
     self.render = function ()
         if self.image == nil then
-            love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
+            -- love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
         else
             love.graphics.draw(self.image, self.x, self.y, 0, self.width/self.image:getWidth(), self.height/self.image:getHeight())
         end
@@ -56,6 +56,10 @@ function Room4:init()
     self.background = love.graphics.newImage('assets/room4/background.png')
     self.background_phase1 = love.graphics.newImage('assets/room4/electricity_on_phase1.png')
     self.background_phase2 = love.graphics.newImage('assets/room4/electricity_on_phase2.png')
+
+    self.doorLockedButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_red.png'))
+    self.doorOpenButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_yellow.png'))
+
 
     ------------------------------DEBRIS------------------------------
     self.debrisBox = PlacableItems(730, 550, 180, 133, love.graphics.newImage('assets/room4/box.png'))
@@ -126,6 +130,10 @@ function Room4:init()
     self.lockIC = PlacableItems(430, 400, 100, 209, love.graphics.newImage('assets/room4/board.png'))
     self.lockIC.unlockedImage = love.graphics.newImage('assets/room4/board_unlock.png')
 
+    self.lockICPopup = PopupWindow(love.graphics.newImage('assets/room4/ic_background_open.png'), 1, 1)
+    self.lockICPopup.gun = InventoryPlacableItems(600, 480, 200, 173, 9, love.graphics.newImage('assets/room4/gun.png'), "electric gun")
+    self.lockICPopup.gunBattery = InventoryPlacableItems(400, 500, 100, 155, 10, love.graphics.newImage('assets/room4/gun_battery.png'), "gun battery")
+
     -------------------------------SWITCHBOARD-----------------------------
     self.switchBoard = {}
     self.switchBoard.x = 250
@@ -166,8 +174,8 @@ end
 
 function Room4:mousepressed(x, y, button, isTouch)
 
-    if not self.miniGame1Popup.active and not self.switchBoardPopup.active and not self.debrisBoxPopup.active and not self.resisterBoxPopup.active then
-        if self.switchBoardPopup.completedPhase1 and checkAABBCollision(x, y, self.icBox) then
+    if not self.miniGame1Popup.active and not self.switchBoardPopup.active and not self.debrisBoxPopup.active and not self.resisterBoxPopup.active and not self.lockICPopup.active then
+        if self.switchBoardPopup.completedPhase1 and not self.switchBoardPopup.completedPhase2 and checkAABBCollision(x, y, self.icBox) then
             self.miniGame1Popup.active = true
             self.blurEff.enable('boxblur')
         end
@@ -182,8 +190,13 @@ function Room4:mousepressed(x, y, button, isTouch)
             self.blurEff.enable("boxblur")
         end
 
-        if checkAABBCollision(x, y, self.resisterBox) then
+        if self.switchBoardPopup.completedPhase1 and checkAABBCollision(x, y, self.resisterBox) then
             self.resisterBoxPopup.active = true
+            self.blurEff.enable("boxblur")
+        end
+
+        if checkAABBCollision(x, y, self.lockIC) then
+            self.lockICPopup.active = true
             self.blurEff.enable("boxblur")
         end
     else
@@ -197,7 +210,8 @@ function Room4:mousepressed(x, y, button, isTouch)
                 assert(value.x ~= nil and value.y ~= nil and value.width ~= nil and value.height ~= nil, "invalid value")
                 if checkAABBCollision(x, y, value) then
                     table.insert(self.miniGame1PopupStack, table.remove(self.miniGame1Stack, key))
-                    self.miniGame1PopupStackWord = self.miniGame1PopupStackWord .. value.id
+                    -- self.miniGame1PopupStackWord = self.miniGame1PopupStackWord .. value.id
+                    
                     bigStackX = 200
                     bigStackY = 300
 
@@ -231,6 +245,17 @@ function Room4:mousepressed(x, y, button, isTouch)
             end
 
             ::continue::
+
+            self.miniGame1PopupStackWord = ""
+            for key, v in pairs(self.miniGame1PopupStack) do
+                self.miniGame1PopupStackWord = self.miniGame1PopupStackWord .. v.id
+            end
+
+            if self.miniGame1PopupStackWord == "2003" then
+                self.switchBoardPopup.completedPhase2 = true
+                self.miniGame1Popup.active = false
+                self.blurEff.disable("boxblur")
+            end
         end
 
         if self.switchBoardPopup.active then
@@ -289,20 +314,46 @@ function Room4:mousepressed(x, y, button, isTouch)
                     self.resisterBoxPopup.MouseSelect.ResistorValue = nil
                 end
             end
+
+            if x < 135 or y < 260 then
+                self.blurEff.disable("boxblur")
+                self.resisterBoxPopup.active = false
+            end
+        end
+
+        if self.lockICPopup.active then
+            if CloseActivePopUpWindow(x, y, self.lockICPopup) then
+                self.blurEff.disable("boxblur")
+            end
+
+            if not self.lockICPopup.gun.addedToInventory and checkAABBCollision(x, y, self.lockICPopup.gun) then
+                self.lockICPopup.gun.addedToInventory = true
+                inventory:insertItem(self.lockICPopup.gun)
+            end
+
+            if not self.lockICPopup.gunBattery.addedToInventory and checkAABBCollision(x, y, self.lockICPopup.gunBattery) then
+                self.lockICPopup.gunBattery.addedToInventory = true
+            end
         end
     end
+
+    inventory:mousepressed(x, y, button, isTouch)
 end
 
 function Room4:keypressed(key)
-    if key == "m" then
-        print(self.resisterBoxPopup.ammeterValue())
-    end
+end
+
+
+function Room4:mousemoved(x, y, dx, dy, isTouch)
+    inventory:mousemoved(x, y, dx, dy, isTouch)
+end
+
+function Room4:mousereleased(x, y, button, isTouch)
+    inventory:mousereleased(x, y, button, isTouch)
 end
 
 function Room4:update(dt)
-    if self.miniGame1PopupStackWord == "2003" then
-        -- print("target reached")
-    end
+    
 end
 
 function Room4:render()
@@ -391,6 +442,12 @@ function Room4:render()
             local mx, my = push:toGame(love.mouse.getPosition())
             love.graphics.draw(self.resisterBoxPopup.MouseSelect.MouseAsset, mx - 100, my - 25, 0, 200/self.resisterBoxPopup.MouseSelect.MouseAsset:getWidth(), 50/self.resisterBoxPopup.MouseSelect.MouseAsset:getHeight())
         end
+    end
+
+    if self.lockICPopup.active then
+        self.lockICPopup.render()
+        self.lockICPopup.gun.render()
+        self.lockICPopup.gunBattery.render()
     end
 
     inventory:render()
