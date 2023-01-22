@@ -253,7 +253,7 @@ function Room2:mousepressed(x, y, button, isTouch)
             end
 
             -- if clicked on lower locker
-            if x > self.locker.lower.x and x < self.locker.lower.x + self.locker.lower.width and y > self.locker.lower.y and y < self.locker.lower.y + self.locker.lower.height then
+            if inventory.selectedItemId == 12 and  x > self.locker.lower.x and x < self.locker.lower.x + self.locker.lower.width and y > self.locker.lower.y and y < self.locker.lower.y + self.locker.lower.height then
                 self.LowerlockerPopup.active = true
 
                 -- REMBERBER we are enabling the blur effect of the dustbin interface

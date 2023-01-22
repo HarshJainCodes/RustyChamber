@@ -2,12 +2,29 @@ Room5 = Class{__includes = BaseState}
 
 Gun = Class{}
 
+tryAgainFont = love.graphics.newFont('assets/room5/oxanium_semiBold.ttf', 40)
+
 function Gun:init(x, y, width, height, image)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
     self.image = image
+end
+
+Button = Class{}
+function Button:init(x, y, width, height, text)
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
+    self.text = text
+    self.render = function ()
+        love.graphics.rectangle("line", self.x, self.y, self.width, self.height, 5)
+
+        love.graphics.setFont(tryAgainFont)
+        love.graphics.printf(self.text, self.x, self.y + 40, self.width, "center")
+    end
 end
 
 ElectricLaser = Class{}
@@ -30,11 +47,16 @@ function Kidnapper:init(x, y, width, height, image)
     self.y = y
     self.width = width
     self.height = height
-    self.speed = 60
+    self.speed = 5
     self.image = image
-    self.jumpX = math.random(0, WINDOW_WIDTH)
-    self.jumpProgress = 0
+    self.jumpX = math.random(200, 1000)
+    self.jumpProgress = 1
     self.currX = x
+    self.kidnapperState = "idle"
+    self.idleImage = love.graphics.newImage('assets/room5/idle.png')
+    self.left_jump_image = love.graphics.newImage('assets/room5/left_jump.png')
+    self.right_jump_image = love.graphics.newImage('assets/room5/right_jump.png')
+    self.waitBeforeJump = 1
 
     self.jumpLerp = function (a, b, t)
         return a + (b - a) * t
@@ -47,23 +69,50 @@ end
 function Kidnapper:update(dt)
     self.y = self.y + self.speed * dt
 
-    if self.jumpProgress >= 1 then
-        self.jumpX = math.random(0, WINDOW_WIDTH)
+    if self.waitBeforeJump > 0 then
+        self.kidnapperState = "idle"
+        self.waitBeforeJump = self.waitBeforeJump - dt
         self.jumpProgress = 0
-        self.x = self.currX
+    else
+        if self.jumpProgress >= 1 then
+            self.waitBeforeJump = 1
+            self.jumpX = math.random(200, 1000)
+            
+            self.jumpProgress = 0
+            self.x = self.currX
+        else
+            if self.jumpX < self.currX then
+                self.kidnapperState = "left_jump"
+            else
+                self.kidnapperState = "right_jump"
+            end
+            self.currX = self.jumpLerp(self.x, self.jumpX, self.jumpProgress)
+        end
+        self.jumpProgress = self.jumpProgress + dt
     end
 
-    self.jumpProgress = self.jumpProgress + dt / 2
+    -- now i must also increase the xscale and yscale of the kidnapper
+    self.width = self.jumpLerp(50, 1300, (self.y - 450)/ 350)
+    self.height = self.jumpLerp(100, 2400, (self.y - 450)/350)
 
-    self.currX = self.jumpLerp(self.x, self.jumpX, self.jumpProgress)
+    
 end
 
 function Kidnapper:render()
-    love.graphics.rectangle("fill", self.currX, self.y, self.width, self.height)
+    -- love.graphics.rectangle("fill", self.currX, self.y, self.width, self.height)
+    if self.kidnapperState == "idle" then
+        love.graphics.draw(self.idleImage, self.currX, self.y, 0, self.width/self.idleImage:getWidth(), self.height/self.idleImage:getHeight())
+    elseif self.kidnapperState == "left_jump" then
+        love.graphics.draw(self.left_jump_image, self.currX, self.y, 0, self.width/self.idleImage:getWidth(), self.height/self.idleImage:getHeight())
+    else
+        love.graphics.draw(self.right_jump_image, self.currX, self.y, 0, self.width/self.idleImage:getWidth(), self.height/self.idleImage:getHeight())
 
+    end
 
+    love.graphics.setColor(1, 0, 0, 1)
     love.graphics.rectangle("line", 100, 50, 1000, 10)
     love.graphics.rectangle("fill", 100, 50, (self.currHealth / self.totalHealth) * 1000, 10)
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 function ElectricLaser:update(dt)
@@ -99,21 +148,37 @@ end
 
 function Room5:mousepressed(x, y, button, isTouch)
     if button == 1 then
-        local mx, my = push:toGame(love.mouse.getPosition())
-        self.laserShoot.x1 = mx
-        self.laserShoot.x2 = mx
-        self.laserShoot.y2 = my
-        self.laserShoot.isPlaying = true
-        self.laserShoot.animation:resume()
+        if not self.Lost then
+            local mx, my = push:toGame(love.mouse.getPosition())
+            self.laserShoot.x1 = mx
+            self.laserShoot.x2 = mx
+            self.laserShoot.y2 = my
+            self.laserShoot.isPlaying = true
+            self.laserShoot.animation:resume()
 
-        if x > self.kidnapper.currX and x < self.kidnapper.currX + self.kidnapper.width and y > self.kidnapper.y and y < self.kidnapper.y + self.kidnapper.height then
-            self.kidnapper.currHealth = self.kidnapper.currHealth - 10
+            if x > self.kidnapper.currX and x < self.kidnapper.currX + self.kidnapper.width and y > self.kidnapper.y and y < self.kidnapper.y + self.kidnapper.height then
+                self.kidnapper.currHealth = self.kidnapper.currHealth - 5
+                -- self.kidnapper.y = self.kidnapper.y - 1
+            end
+        else
+            if checkAABBCollision(x, y, self.tryAgainButton) then
+                -- restart the game
+                self.Lost = false
+                self.vignetteEff.disable("vignette")
+                self.kidnapper.y = 450
+                self.kidnapper.width = 50
+                self.kidnapper.height = 100
+                self.vignetteEff.VigRadius = 1.5
+                self.kidnapper.currHealth = self.kidnapper.totalHealth
+            end
         end
     end
 end
 
 function Room5:init()
     math.randomseed(os.time())
+
+    self.background = love.graphics.newImage('assets/room5/background.png')
 
     self.anim8 = require 'libraries.anim8.anim8'
 
@@ -129,7 +194,19 @@ function Room5:init()
 
 
     ----------------KIDNAPPER----------------------
-    self.kidnapper = Kidnapper(WINDOW_HEIGHT/2, 0, 50, 100)
+    self.kidnapper = Kidnapper(WINDOW_WIDTH/2, 450, 50, 100)
+
+
+    self.vignetteEff = moonshine(moonshine.effects.vignette)
+    self.vignetteEff.vignette.radius = 1.5
+    self.vignetteEff.vignette.opacity = 1
+    self.vignetteEff.disable("vignette")
+    self.Lost = false
+    self.vignetteEff.VigRadius = 1.5
+
+    self.LostFont = love.graphics.newFont('assets/room5/oxanium_semiBold.ttf', 100)
+
+    self.tryAgainButton = Button(WINDOW_WIDTH/2 - 150, WINDOW_HEIGHT/2 + 100, 300, 100, "TRY AGAIN")
 end
 
 
@@ -139,13 +216,40 @@ function Room5:update(dt)
     self.laserShoot:update(dt)
 
     self.kidnapper:update(dt)
+
+    if self.Lost then
+        self.vignetteEff.VigRadius = self.vignetteEff.VigRadius - dt
+        self.vignetteEff.vignette.radius = self.vignetteEff.VigRadius
+    end
+
+    if self.kidnapper.y > 500 then
+        self.vignetteEff.enable("vignette")
+        self.Lost = true
+    end
+
+    if self.kidnapper.currHealth <= 0 then
+        
+    end
 end
 
 
 function Room5:render()
-    self.gun:render()
+    if self.vignetteEff.VigRadius >= 0 then
+        self.vignetteEff(
+            function ()
+                love.graphics.draw(self.background, 0, 0, 0, WINDOW_WIDTH/self.background:getWidth(), WINDOW_HEIGHT/self.background:getHeight())
+                self.gun:render()
 
-    self.kidnapper:render()
-    self.laserShoot:render()
-    
+                self.kidnapper:render()
+                self.laserShoot:render()
+            end
+        )
+    else
+        love.graphics.setFont(self.LostFont)
+        love.graphics.setColor(1, 0, 0, 1)
+        love.graphics.printf([[YOU LOST !! KIDNAPPER GOT YOU]], 0, WINDOW_HEIGHT/2 - 200, WINDOW_WIDTH, "center")
+        love.graphics.setColor(1, 1, 1, 1)
+
+        self.tryAgainButton.render()
+    end
 end

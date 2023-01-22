@@ -26,7 +26,7 @@ function love.load()
     push:setupScreen(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
-        stretched = false,
+        stretched = true,
         -- fullscreentype = "android",
         highdpi = true,
         usedpiscale = true
@@ -98,8 +98,6 @@ function love.load()
         screwdriver.addedToInventory = savedItems2.screwDriver
         storeRoomOpened = savedItems2.storeRoomOpened
 
-        print(storeRoomOpened)
-
         if savedItems2.crowbar == true then
             inventory:insertItem(crowbar)
         end
@@ -152,7 +150,7 @@ function love.load()
         love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
     end
 
-    gStateMachine:change('room2')
+    gStateMachine:change('mainMenu')
 end
 
 function love.resize(w, h)

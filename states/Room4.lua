@@ -57,8 +57,9 @@ function Room4:init()
     self.background_phase1 = love.graphics.newImage('assets/room4/electricity_on_phase1.png')
     self.background_phase2 = love.graphics.newImage('assets/room4/electricity_on_phase2.png')
 
-    self.doorLockedButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_red.png'))
-    self.doorOpenButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_yellow.png'))
+    self.doorLockedButton = PlacableItems(650, 350, 50, 50, love.graphics.newImage('assets/room4/button_door_red.png'))
+    self.doorOpenButton = PlacableItems(650, 350, 50, 50, love.graphics.newImage('assets/room4/button_door_yellow.png'))
+    self.room5DoorLocked = true
 
     self.backButton = {}
     self.backButton.width = 60
@@ -94,6 +95,8 @@ function Room4:init()
             return self.resisterBoxPopup.r1.value + ((self.resisterBoxPopup.r2.value * self.resisterBoxPopup.r3.value) / (self.resisterBoxPopup.r2.value + self.resisterBoxPopup.r3.value))
         end
     end
+
+    self.resisterBoxPopup.ammeterWarningFont = love.graphics.newFont('assets/room4/oxanium_semiBold.ttf', 20)
 
     self.resisterBoxPopup.ammeterFont = love.graphics.newFont(40)
 
@@ -185,12 +188,17 @@ end
 function Room4:mousepressed(x, y, button, isTouch)
     if checkAABBCollision(x, y, self.backButton) then
         gStateMachine:change('room3')
+        LOCKED_ROOMS = math.max(LOCKED_ROOMS, 5)
     end
 
     if not self.miniGame1Popup.active and not self.switchBoardPopup.active and not self.debrisBoxPopup.active and not self.resisterBoxPopup.active and not self.lockICPopup.active then
         if self.switchBoardPopup.completedPhase1 and not self.switchBoardPopup.completedPhase2 and checkAABBCollision(x, y, self.icBox) then
             self.miniGame1Popup.active = true
             self.blurEff.enable('boxblur')
+        end
+
+        if not self.room5DoorLocked and checkAABBCollision(x, y, self.doorOpenButton) then
+            gStateMachine:change('room5')
         end
 
         if not self.switchBoardPopup.completedPhase1 and checkAABBCollision(x, y, self.switchBoard) then
@@ -208,7 +216,7 @@ function Room4:mousepressed(x, y, button, isTouch)
             self.blurEff.enable("boxblur")
         end
 
-        if checkAABBCollision(x, y, self.lockIC) then
+        if self.switchBoardPopup.completedPhase2 == true and  checkAABBCollision(x, y, self.lockIC) then
             self.lockICPopup.active = true
             self.blurEff.enable("boxblur")
         end
@@ -312,21 +320,24 @@ function Room4:mousepressed(x, y, button, isTouch)
         end
 
         if self.resisterBoxPopup.active then
-            for key, selectableR in pairs(self.resisterBoxPopup.selectableResistors) do
-                if checkAABBCollision(x, y, selectableR) then
-                    self.resisterBoxPopup.MouseSelect.MouseAsset = selectableR.image
-                    self.resisterBoxPopup.MouseSelect.ResistorValue = selectableR.value
+            if self.debrisBoxPopup.ammeter.collected then
+                for key, selectableR in pairs(self.resisterBoxPopup.selectableResistors) do
+                    if checkAABBCollision(x, y, selectableR) then
+                        self.resisterBoxPopup.MouseSelect.MouseAsset = selectableR.image
+                        self.resisterBoxPopup.MouseSelect.ResistorValue = selectableR.value
+                    end
+                end
+    
+                for key, putR in pairs(self.resisterBoxPopup.putResistors) do
+                    if checkAABBCollision(x, y, putR) then
+                        putR.value = self.resisterBoxPopup.MouseSelect.ResistorValue
+                        putR.image = self.resisterBoxPopup.MouseSelect.MouseAsset
+                        self.resisterBoxPopup.MouseSelect.MouseAsset = nil
+                        self.resisterBoxPopup.MouseSelect.ResistorValue = nil
+                    end
                 end
             end
-
-            for key, putR in pairs(self.resisterBoxPopup.putResistors) do
-                if checkAABBCollision(x, y, putR) then
-                    putR.value = self.resisterBoxPopup.MouseSelect.ResistorValue
-                    putR.image = self.resisterBoxPopup.MouseSelect.MouseAsset
-                    self.resisterBoxPopup.MouseSelect.MouseAsset = nil
-                    self.resisterBoxPopup.MouseSelect.ResistorValue = nil
-                end
-            end
+            
 
             if x < 135 or y < 260 then
                 self.blurEff.disable("boxblur")
@@ -366,7 +377,9 @@ function Room4:mousereleased(x, y, button, isTouch)
 end
 
 function Room4:update(dt)
-    
+    if self.switchBoardPopup.completedPhase1 == true and self.switchBoardPopup.completedPhase2 == true and self.lockICPopup.gun.addedToInventory == true  then
+        self.room5DoorLocked = false
+    end
 end
 
 function Room4:render()
@@ -386,9 +399,19 @@ function Room4:render()
 
             self.icBox.render()
 
-            self.lockIC.render()
+            if not self.switchBoardPopup.completedPhase2 == true then
+                self.lockIC.render()
+            else
+                love.graphics.draw(self.lockIC.unlockedImage, self.lockIC.x, self.lockIC.y, 0, self.lockIC.width/self.lockIC.unlockedImage:getWidth(), self.lockIC.height/self.lockIC.unlockedImage:getHeight())
+            end
 
             self.paper.render()
+
+            if self.room5DoorLocked then
+                self.doorLockedButton.render()
+            else
+                self.doorOpenButton.render()
+            end
         end
     )
 
@@ -407,6 +430,8 @@ function Room4:render()
         for key, value in pairs(self.miniGame1PopupStack) do
             love.graphics.draw(value.image, value.x, value.y, 0, value.width/value.image:getWidth(), value.height/value.image:getHeight())
         end
+
+        
     end
 
     if self.switchBoardPopup.active then
@@ -431,7 +456,17 @@ function Room4:render()
 
     if self.resisterBoxPopup.active then
         self.resisterBoxPopup.render()
-        love.graphics.draw(self.resisterBoxPopup.ammeter, 900, WINDOW_HEIGHT/2 - self.resisterBoxPopup.ammeter:getHeight()/2)
+        love.graphics.setFont(self.resisterBoxPopup.ammeterWarningFont)
+        love.graphics.printf("make a resistor combination of 5 ohms", 100, 200, 800, "center")
+
+        if self.debrisBoxPopup.ammeter.collected then
+            love.graphics.draw(self.resisterBoxPopup.ammeter, 900, WINDOW_HEIGHT/2 - self.resisterBoxPopup.ammeter:getHeight()/2)
+        else
+            love.graphics.setFont(self.resisterBoxPopup.ammeterWarningFont)
+            love.graphics.setColor(1, 0, 0, 1)
+            love.graphics.printf("you need something to measure the resistance", 900, WINDOW_HEIGHT/2 - self.resisterBoxPopup.ammeter:getHeight()/2, 150, "center")
+            love.graphics.setColor(1, 1, 1, 1)
+        end
 
         for key, resistor in pairs(self.resisterBoxPopup.selectableResistors) do
             love.graphics.draw(resistor.image, resistor.x, resistor.y, 0, resistor.width/resistor.image:getWidth(), resistor.height/resistor.image:getHeight())
@@ -449,7 +484,10 @@ function Room4:render()
         else
             ammValue = tonumber(string.format("%.3f", ammValue))
         end
-        love.graphics.printf(ammValue, 920, 240, 150, "center")
+        if self.debrisBoxPopup.ammeter.collected then
+            love.graphics.printf(ammValue, 920, 240, 150, "center")
+        end
+        
 
         if self.resisterBoxPopup.MouseSelect.MouseAsset ~= nil then
             local mx, my = push:toGame(love.mouse.getPosition())
@@ -464,7 +502,7 @@ function Room4:render()
     end
 
     inventory:render()
-
+    
     self.backButton.render()
 
 end

@@ -70,11 +70,16 @@ function Room3:init()
     self.waterTankPopup = PopupWindow(love.graphics.newImage('assets/room3/watertank_top_water.png'), 0.6, 0.6)
     self.waterTankPopup.emptyWater = false
     self.waterTankPopup.revealedImage = love.graphics.newImage('assets/room3/watertank_water_empty.png')
+    self.waterTankPopup.yellow_key = InventoryPlacableItems(620, 400, 80, 80, 12, love.graphics.newImage('assets/room3/key_yellow.png'), "yellow key")
+
     self.waterTankPopup.render = function ()
         if not self.waterTankPopup.emptyWater then
             love.graphics.draw(self.waterTankPopup.image, self.waterTankPopup.x, self.waterTankPopup.y, 0, self.waterTankPopup.width/self.waterTankPopup.image:getWidth(), self.waterTankPopup.height/self.waterTankPopup.image:getHeight())
         else
             love.graphics.draw(self.waterTankPopup.revealedImage, self.waterTankPopup.x, self.waterTankPopup.y, 0, self.waterTankPopup.width/self.waterTankPopup.revealedImage:getWidth(), self.waterTankPopup.height/self.waterTankPopup.revealedImage:getHeight())
+            if not self.waterTankPopup.yellow_key.addedToInventory then
+                self.waterTankPopup.yellow_key.render()
+            end
         end
     end
     self.waterTankPopup.alpha = 1
@@ -182,6 +187,11 @@ function Room3:mousepressed(x, y, button, istouch)
                 if CloseActivePopUpWindow(x, y, self.waterTankPopup) then
                     self.modifiedV.disable("boxblur")
                     self.modifiedV.enable("modified_vignette")
+                end
+
+                if not self.waterTankPopup.yellow_key.addedToInventory and checkAABBCollision(x, y, self.waterTankPopup.yellow_key) then
+                    self.waterTankPopup.yellow_key.addedToInventory = true
+                    inventory:insertItem(self.waterTankPopup.yellow_key)
                 end
             end
 

@@ -5,7 +5,7 @@ function Room1:init()
     self.id = 1
     self.backgroundImage = love.graphics.newImage('assets/download.png')
     self.startingVideo = love.graphics.newVideo('assets/starting_scene.ogg')
-    -- self.startingVideo:play()
+    self.startingVideo:play()
 
     -- will store all the items that can be obtained
     self.items = {}

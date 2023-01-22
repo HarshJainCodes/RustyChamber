@@ -135,7 +135,7 @@ function Inventory:render()
             love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())
             love.graphics.setColor(1, 1, 1)
             --print(value.name)
-            love.graphics.printf(value.name, value.x - #value.name * 30, value.y, #value.name + 100, "center")
+            --love.graphics.printf(value.name, value.x - #value.name * 30, value.y, #value.name + 100, "center")
         else
             --love.graphics.rectangle("line", value.x, value.y, 100, 100)
             love.graphics.draw(self.image, value.x, value.y, 0, 100/self.image:getWidth(), 100/self.image:getHeight())
