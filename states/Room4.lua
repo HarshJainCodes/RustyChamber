@@ -60,6 +60,16 @@ function Room4:init()
     self.doorLockedButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_red.png'))
     self.doorOpenButton = PlacableItems(500, 500, 50, 50, love.graphics.newImage('assets/room4/button_door_yellow.png'))
 
+    self.backButton = {}
+    self.backButton.width = 60
+    self.backButton.height = 60
+    self.backButton.x = 20
+    self.backButton.y = WINDOW_HEIGHT/2 - self.backButton.height/2
+    self.backButton.image = love.graphics.newImage('assets/room4/back_button.png')
+    self.backButton.render = function ()
+        love.graphics.draw(self.backButton.image, self.backButton.x, self.backButton.y, 0, self.backButton.width/self.backButton.image:getWidth(), self.backButton.height/self.backButton.image:getHeight())
+    end
+    
 
     ------------------------------DEBRIS------------------------------
     self.debrisBox = PlacableItems(730, 550, 180, 133, love.graphics.newImage('assets/room4/box.png'))
@@ -173,6 +183,9 @@ function Room4:init()
 end
 
 function Room4:mousepressed(x, y, button, isTouch)
+    if checkAABBCollision(x, y, self.backButton) then
+        gStateMachine:change('room3')
+    end
 
     if not self.miniGame1Popup.active and not self.switchBoardPopup.active and not self.debrisBoxPopup.active and not self.resisterBoxPopup.active and not self.lockICPopup.active then
         if self.switchBoardPopup.completedPhase1 and not self.switchBoardPopup.completedPhase2 and checkAABBCollision(x, y, self.icBox) then
@@ -451,5 +464,7 @@ function Room4:render()
     end
 
     inventory:render()
+
+    self.backButton.render()
 
 end

@@ -98,6 +98,8 @@ function love.load()
         screwdriver.addedToInventory = savedItems2.screwDriver
         storeRoomOpened = savedItems2.storeRoomOpened
 
+        print(storeRoomOpened)
+
         if savedItems2.crowbar == true then
             inventory:insertItem(crowbar)
         end
@@ -150,7 +152,7 @@ function love.load()
         love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
     end
 
-    gStateMachine:change('room5')
+    gStateMachine:change('room2')
 end
 
 function love.resize(w, h)

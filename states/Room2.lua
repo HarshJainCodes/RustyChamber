@@ -69,7 +69,9 @@ function Room2:init()
         love.graphics.rectangle("line", self.enterPinInteractive.x, self.enterPinInteractive.y, self.enterPinInteractive.width, self.enterPinInteractive.height)
     end
 
-    self.enterPinPopup = PopupWindow(love.graphics.newImage('assets/room2/demo_image.jpg'), 0.5, 0.5)
+    self.enterPinPopup = PopupWindow(love.graphics.newImage('assets/room2/demo_image.jpg'), 0.5, 0.6)
+    self.enterPinPopup.lcdScreen = PlacableItems(WINDOW_WIDTH/2 - 300, 100, 600, 200, love.graphics.newImage('assets/room2/lcd_screen.png'))
+    self.enterPinPopup.lcdScreenFont = love.graphics.newFont('assets/room2/oxanium_semiBold.ttf', 100)
     self.enterPinPopup.text = ""
 
     self.allButtons = {}
@@ -288,6 +290,9 @@ function Room2:mousepressed(x, y, button, isTouch)
             end
 
             -- reveal the door to the basement
+            print(inventory.selectedItemId)
+            print(storeRoomOpened)
+
             if inventory.selectedItemId == 4 and storeRoomOpened == false and checkAABBCollision(x, y, self.storeRoomDoorInteractable) then
                 storeRoomOpened = true
                 savedItems2.storeRoomOpened = true
@@ -571,13 +576,16 @@ function Room2:render()
             if self.enterPinPopup.active then
                 love.graphics.setColor(1, 1, 1, self.enterPinPopup.alphaInitial)
                 self.enterPinPopup.render()
+                self.enterPinPopup.lcdScreen.render()
+
                 love.graphics.setColor(1, 1, 1, 1)
                 for key, value in pairs(self.allButtons) do
                     value:render()
                 end
+                love.graphics.setFont(self.enterPinPopup.lcdScreenFont)
                 for i = 1, math.min(4, #self.enterPinPopup.text) do
                     love.graphics.setColor(self.textColor[i])
-                    love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 10, self.enterPinPopup.y, self.enterPinPopup.width, "center")
+                    love.graphics.printf(string.sub(self.enterPinPopup.text, i, i), self.enterPinPopup.x + i * 70 - 150, self.enterPinPopup.y + 100, self.enterPinPopup.width, "center")
                 end
                 love.graphics.setColor(1, 1, 1, 1)
             end
@@ -589,7 +597,6 @@ function Room2:render()
             inventory:render()
 
             if MOUSE_ASSET ~= nil then
-                --love.mouse.setVisible(false)
                 local mouseX, mouseY = push:toGame(love.mouse.getPosition())
                 if mouseX ~= nil and mouseY ~= nil then
                     love.graphics.draw(MOUSE_ASSET, mouseX, mouseY, 0, 100/MOUSE_ASSET:getWidth(), 100/MOUSE_ASSET:getHeight(), MOUSE_ASSET:getWidth()/2, MOUSE_ASSET:getHeight()/2)
