@@ -193,7 +193,7 @@ function Room5:init()
     ----------GUN-----------------
 
     self.gun = Gun(WINDOW_WIDTH/2 - 30, WINDOW_HEIGHT - 93, 60, 93, love.graphics.newImage('assets/room5/gun_top.png'))
-    self.gun.sound = love.audio.newSource('assets/room5/electric_sound2.mp3', 'static')
+    self.gun.sound = love.audio.newSource('assets/room5/electric_sound.mpeg', 'static')
 
     ----------------KIDNAPPER----------------------
     self.kidnapper = Kidnapper(WINDOW_WIDTH/2, 450, 50, 100)
