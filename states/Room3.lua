@@ -79,7 +79,10 @@ function Room3:init()
         else
             love.graphics.draw(self.waterTankPopup.revealedImage, self.waterTankPopup.x, self.waterTankPopup.y, 0, self.waterTankPopup.width/self.waterTankPopup.revealedImage:getWidth(), self.waterTankPopup.height/self.waterTankPopup.revealedImage:getHeight())
             if not self.waterTankPopup.yellow_key.addedToInventory then
-                self.waterTankPopup.yellow_key.render()
+                if yellow_key == true then 
+                    self.waterTankPopup.yellow_key.render()
+                    --yellow_key=false
+                end 
             end
         end
     end
@@ -194,7 +197,11 @@ function Room3:mousepressed(x, y, button, istouch)
 
                 if not self.waterTankPopup.yellow_key.addedToInventory and checkAABBCollision(x, y, self.waterTankPopup.yellow_key) then
                     self.waterTankPopup.yellow_key.addedToInventory = true
-                    inventory:insertItem(self.waterTankPopup.yellow_key)
+
+                    if yellow_key == true then 
+                        inventory:insertItem(self.waterTankPopup.yellow_key)
+                        yellow_key=false 
+                    end 
                 end
             end
 

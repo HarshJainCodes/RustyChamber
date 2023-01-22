@@ -19,11 +19,11 @@ function Room2:pinPressed(x, y, buttons)
     for key, value in pairs(buttons) do
         if checkAABBCollision(x, y, value) then
             self.enterPinPopup.text = self.enterPinPopup.text .. tostring(value.value)
-            if self.enterPinPopup.text == "2003" then
+            if self.enterPinPopup.text == "2134" then
                 self.startingTransition.enable("vignette")
                 self.LeavingScene4 = true
             end
-            if #self.enterPinPopup.text == 4 and self.enterPinPopup.text ~= "2003" then
+            if #self.enterPinPopup.text == 4 and self.enterPinPopup.text ~= "2134" then
                 self.enterPinPopup.text = ""
             end
         end
@@ -32,6 +32,7 @@ end
 
 
 function Room2:init()
+    
     self.id = 2
 
     self.startingTransition = moonshine(WINDOW_WIDTH, WINDOW_HEIGHT, moonshine.effects.vignette)
@@ -572,6 +573,10 @@ function Room2:render()
                 battery.render()
                 love.graphics.setColor(1, 1, 1, 1)
             end
+            if not self.light.switchedOn then
+                self.digit_glow.render()
+            end
+
         
             if self.enterPinPopup.active then
                 love.graphics.setColor(1, 1, 1, self.enterPinPopup.alphaInitial)
@@ -590,9 +595,9 @@ function Room2:render()
                 love.graphics.setColor(1, 1, 1, 1)
             end
 
-            if not self.light.switchedOn then
-                self.digit_glow.render()
-            end
+            --if not self.light.switchedOn then
+            --    self.digit_glow.render()
+            --end
 
             inventory:render()
 
