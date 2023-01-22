@@ -262,7 +262,7 @@ function Room1:render()
                             love.graphics.setColor(1, 1, 1, 1)
                         end
 
-                        love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)
+                        --love.graphics.rectangle("fill", self.leftRoomButton.x, self.leftRoomButton.y, self.leftRoomButton.width, self.leftRoomButton.height)
 
                         inventory:render()
 

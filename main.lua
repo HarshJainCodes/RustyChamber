@@ -2,16 +2,17 @@ WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 800
 
 push = require 'push'
-Class = require 'Class'
+Class = require 'class'
 json = require 'libraries.json.json'
 moonshine = require 'libraries.moonshine'
 
 require 'StateMachine'
+require 'states.helperFunctions'
 require 'states/BaseState'
 require 'states.MainMenu'
 require 'states.RoomSelect'
 require 'states.TransitionToNextLevel'
-require 'states.helperFunctions'
+
 require 'inventory'
 require 'states.Room1'
 require 'states.Room2'
@@ -24,7 +25,7 @@ require 'states.Room5'
 function love.load()
 -- this is the github version
     push:setupScreen(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
-        fullscreen = false,
+        fullscreen = true,
         resizable = true,
         stretched = true,
         -- fullscreentype = "android",
@@ -192,7 +193,7 @@ end
 function love.draw()
     push:apply('start')
     gStateMachine:render()
-    love.graphics.print(love.timer.getFPS(), 0, 0)
+    -- love.graphics.print(love.timer.getFPS(), 0, 0)
 
     --love.graphics.print(collectgarbage("count"))
     push:apply('end')

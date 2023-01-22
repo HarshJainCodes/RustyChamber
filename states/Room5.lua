@@ -155,6 +155,8 @@ function Room5:mousepressed(x, y, button, isTouch)
             self.laserShoot.y2 = my
             self.laserShoot.isPlaying = true
             self.laserShoot.animation:resume()
+            self.gun.sound:stop()
+            self.gun.sound:play()
 
             if x > self.kidnapper.currX and x < self.kidnapper.currX + self.kidnapper.width and y > self.kidnapper.y and y < self.kidnapper.y + self.kidnapper.height then
                 self.kidnapper.currHealth = self.kidnapper.currHealth - 5
@@ -191,7 +193,7 @@ function Room5:init()
     ----------GUN-----------------
 
     self.gun = Gun(WINDOW_WIDTH/2 - 30, WINDOW_HEIGHT - 93, 60, 93, love.graphics.newImage('assets/room5/gun_top.png'))
-
+    self.gun.sound = love.audio.newSource('assets/room5/electric_sound2.mp3', 'static')
 
     ----------------KIDNAPPER----------------------
     self.kidnapper = Kidnapper(WINDOW_WIDTH/2, 450, 50, 100)
@@ -204,7 +206,11 @@ function Room5:init()
     self.Lost = false
     self.vignetteEff.VigRadius = 1.5
 
+    self.runAwayVideo = love.graphics.newVideo('assets/room5/runaway.ogg')
+    self.safelyEscaped = love.graphics.newImage('assets/room5/escapedpng.png')
+
     self.LostFont = love.graphics.newFont('assets/room5/oxanium_semiBold.ttf', 100)
+    self.Won = false
 
     self.tryAgainButton = Button(WINDOW_WIDTH/2 - 150, WINDOW_HEIGHT/2 + 100, 300, 100, "TRY AGAIN")
 end
@@ -215,7 +221,10 @@ function Room5:update(dt)
 
     self.laserShoot:update(dt)
 
-    self.kidnapper:update(dt)
+    if not self.Won and not self.Lost then
+        self.kidnapper:update(dt)
+    end
+    
 
     if self.Lost then
         self.vignetteEff.VigRadius = self.vignetteEff.VigRadius - dt
@@ -227,8 +236,9 @@ function Room5:update(dt)
         self.Lost = true
     end
 
-    if self.kidnapper.currHealth <= 0 then
-        
+    if self.Won == false and self.kidnapper.currHealth <= 0 then
+        self.Won = true
+        self.runAwayVideo:play()
     end
 end
 
@@ -244,12 +254,22 @@ function Room5:render()
                 self.laserShoot:render()
             end
         )
-    else
-        love.graphics.setFont(self.LostFont)
-        love.graphics.setColor(1, 0, 0, 1)
-        love.graphics.printf([[YOU LOST !! KIDNAPPER GOT YOU]], 0, WINDOW_HEIGHT/2 - 200, WINDOW_WIDTH, "center")
-        love.graphics.setColor(1, 1, 1, 1)
 
-        self.tryAgainButton.render()
+        if self.Won then
+            if self.runAwayVideo:isPlaying() then
+                love.graphics.draw(self.runAwayVideo, 0, 0, 0, WINDOW_WIDTH/self.runAwayVideo:getWidth(), WINDOW_HEIGHT/self.runAwayVideo:getHeight())
+            else
+                love.graphics.draw(self.safelyEscaped, 0, 0, 0, WINDOW_WIDTH/self.safelyEscaped:getWidth(), WINDOW_HEIGHT/self.safelyEscaped:getHeight())
+            end
+        end
+    else
+        if self.Lost then
+            love.graphics.setFont(self.LostFont)
+            love.graphics.setColor(1, 0, 0, 1)
+            love.graphics.printf([[YOU LOST !! KIDNAPPER GOT YOU]], 0, WINDOW_HEIGHT/2 - 200, WINDOW_WIDTH, "center")
+            love.graphics.setColor(1, 1, 1, 1)
+
+            self.tryAgainButton.render()
+        end
     end
 end

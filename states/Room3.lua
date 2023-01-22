@@ -44,6 +44,7 @@ function Room3:init()
     self.waterPipeLine.wireOnPipeline.alpha = 1
     self.waterPipeLine.OnCock = PlacableItems(450, 700, 150, 100, love.graphics.newImage('assets/room3/cock.png'))
     self.waterPipeLine.PlaceOnCock = false
+    self.waterPipeLine.water_tank_sound = love.audio.newSource('assets/room3/water_tank_empty_sound.mp3', 'static')
     self.waterPipeLine.render = function ()
         if not self.waterPipeLine.PlaceOnCock then
             love.graphics.draw(self.waterPipeLine.image, self.waterPipeLine.x, self.waterPipeLine.y, 0, self.waterPipeLine.width/self.waterPipeLine.image:getWidth(), self.waterPipeLine.height/self.waterPipeLine.image:getHeight())
@@ -91,6 +92,7 @@ function Room3:init()
 
     --------------------------------------------------MIRROR----------------------------------------------------------------------------------
     self.mirrorInteractable = PlacableItems(200, 210, 200, 200, love.graphics.newImage('assets/room3/mirror.png'))
+    self.mirrorInteractable.glass_sound = love.audio.newSource('assets/room3/glass_smash.mp3', 'static')
     -- self.mirrorInteractable.hidden = false
     self.mirrorInteractable.alpha = 1
 
@@ -168,15 +170,16 @@ function Room3:mousepressed(x, y, button, istouch)
                 love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
             end
 
-            if checkAABBCollision(x, y, self.mirrorInteractable) then
+            if not mirorHidden and checkAABBCollision(x, y, self.mirrorInteractable) then
                 mirrorHidden = true
-
+                self.mirrorInteractable.glass_sound:play()
                 savedItems2.mirrorHidden = true
                 love.filesystem.write('inventorySaved2.txt', json.encode(savedItems2))
             end
             if self.waterPipeLine.removedDirt and checkAABBCollision(x, y, self.waterPipeLine) then
                 self.waterPipeLine.PlaceOnCock = true
                 self.waterTankPopup.emptyWater = true
+                self.waterPipeLine.water_tank_sound:play()
             end
 
             if not self.waterPipeLine.removedDirt and checkAABBCollision(x, y, self.waterPipeLine.wireOnPipeline) then

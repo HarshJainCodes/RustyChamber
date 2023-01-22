@@ -92,7 +92,12 @@ function Room4:init()
         if self.resisterBoxPopup.r1.value == nil or self.resisterBoxPopup.r2.value == nil or self.resisterBoxPopup.r3.value == nil then
             return nil
         else
-            return self.resisterBoxPopup.r1.value + ((self.resisterBoxPopup.r2.value * self.resisterBoxPopup.r3.value) / (self.resisterBoxPopup.r2.value + self.resisterBoxPopup.r3.value))
+            amm = self.resisterBoxPopup.r1.value + ((self.resisterBoxPopup.r2.value * self.resisterBoxPopup.r3.value) / (self.resisterBoxPopup.r2.value + self.resisterBoxPopup.r3.value))
+            if amm == 5 then
+                self.ammeterValue5 = true
+            end
+
+            return amm
         end
     end
 
@@ -104,6 +109,9 @@ function Room4:init()
     self.resisterBoxPopup.r1 = CircuitResistor(200, 375, 200, 50, nil, nil)
     self.resisterBoxPopup.r2 = CircuitResistor(550, 300, 200, 50, nil, nil)
     self.resisterBoxPopup.r3 = CircuitResistor(550, 440, 200, 50, nil, nil)
+
+
+    self.ammeterValue5 = false
 
     table.insert(self.resisterBoxPopup.putResistors, self.resisterBoxPopup.r1)
     table.insert(self.resisterBoxPopup.putResistors, self.resisterBoxPopup.r2)
@@ -377,7 +385,7 @@ function Room4:mousereleased(x, y, button, isTouch)
 end
 
 function Room4:update(dt)
-    if self.switchBoardPopup.completedPhase1 == true and self.switchBoardPopup.completedPhase2 == true and self.lockICPopup.gun.addedToInventory == true  then
+    if self.switchBoardPopup.completedPhase1 == true and self.switchBoardPopup.completedPhase2 == true and self.lockICPopup.gun.addedToInventory == true and self.ammeterValue5 then
         self.room5DoorLocked = false
     end
 end
