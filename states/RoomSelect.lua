@@ -34,11 +34,11 @@ function RoomSelect:init()
 
 
     -- make those room cards
-    self.room1 = RoomCard(WINDOW_WIDTH/6 + self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 1, "Room 1", "room1")
-    self.room2 = RoomCard(WINDOW_WIDTH/6 + 3 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 2, "Room 2", "room2")
-    self.room3 = RoomCard(WINDOW_WIDTH/6 + 5 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 3, "Room 3", "room3")
-    self.room4 = RoomCard(WINDOW_WIDTH/6 + 7 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 4, "Room 4", "room4")
-    self.room5 = RoomCard(WINDOW_WIDTH/6 + 9 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 5, "Room 5", "room5")
+    self.room1 = RoomCard(-300+WINDOW_WIDTH/6 + self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 1, "Room 1", "room1")
+    self.room2 = RoomCard(-250+WINDOW_WIDTH/6 + 3 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 2, "Room 2", "room2")
+    self.room3 = RoomCard(-200+WINDOW_WIDTH/6 + 5 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 3, "Room 3", "room3")
+    self.room4 = RoomCard(-150+WINDOW_WIDTH/6 + 7 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 4, "Room 4", "room4")
+    self.room5 = RoomCard(-100+WINDOW_WIDTH/6 + 9 * self.roomWidth/2, WINDOW_HEIGHT/2 - self.roomHeight/2, self.roomWidth, self.roomHeight, 5, "Room 5", "room5")
 
     self.lockedRoomImage = love.graphics.newImage('assets/room_level_thumbnail/locked/locked_icon.png')
 
