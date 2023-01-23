@@ -40,7 +40,7 @@ function MainMenu:init()
         
     -- end, "continue")
 
-    self.helpButton = MainMenu_Button(200, 400, 300, 150, 300, 150, self.help_icon_selected, self.help_icon, function ()
+    self.helpButton = MainMenu_Button(200, 320, 300, 150, 300, 150, self.help_icon_selected, self.help_icon, function ()
         self.helpOn = true
     end, "help")
 
