@@ -195,7 +195,7 @@ end
 
 function Room4:mousepressed(x, y, button, isTouch)
     if checkAABBCollision(x, y, self.backButton) then
-        gStateMachine:change('room3')
+        gStateMachine:change('room2')
         LOCKED_ROOMS = math.max(LOCKED_ROOMS, 5)
     end
 

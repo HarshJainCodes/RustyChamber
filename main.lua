@@ -20,7 +20,8 @@ require 'states.Room3'
 require 'states.Room4'
 require 'states.Room5'
 
-
+--global for key Count -- 
+yellow_key=true
 
 function love.load()
 -- this is the github version
@@ -193,6 +194,7 @@ end
 function love.draw()
     push:apply('start')
     gStateMachine:render()
+
     -- love.graphics.print(love.timer.getFPS(), 0, 0)
 
     --love.graphics.print(collectgarbage("count"))
